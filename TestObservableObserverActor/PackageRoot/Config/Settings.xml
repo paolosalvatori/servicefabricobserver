@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <Section Name="TestObservableObserverActorReplicatorConfig">
+      <Parameter Name="ReplicatorEndpoint" Value="TestObservableObserverActorReplicatorEndpoint" />
+      <Parameter Name="BatchAcknowledgementInterval" Value="0.005" />
+   </Section>
+   <Section Name="TestObservableObserverActorReplicatorSecurityConfig">
+      <Parameter Name="CredentialType" Value="None" />
+   </Section>
+   <Section Name="FrameworkConfig">
+      <Parameter Name="RegistryServiceUri" Value="fabric:/ObserverPattern/RegistryService" />
+      <Parameter Name="MessageBoxServiceUri" Value="fabric:/ObserverPattern/MessageBoxService" />
+   </Section>
+</Settings>

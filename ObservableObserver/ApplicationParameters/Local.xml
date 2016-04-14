@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="fabric:/ObserverPattern" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <Parameters>
+      <Parameter Name="GatewayService_InstanceCount" Value="1" />
+      <Parameter Name="GatewayService_ServiceRelativePath" Value="gateway" />
+      <Parameter Name="GatewayService_MaxRetryCount" Value="3" />
+      <Parameter Name="GatewayService_BackoffDelay" Value="1" />
+      <Parameter Name="MessageBoxService_PartitionCount" Value="1" />
+      <Parameter Name="MessageBoxService_MinReplicaSetSize" Value="2" />
+      <Parameter Name="MessageBoxService_TargetReplicaSetSize" Value="3" />
+      <Parameter Name="RegistryService_PartitionCount" Value="1" />
+      <Parameter Name="RegistryService_MinReplicaSetSize" Value="2" />
+      <Parameter Name="RegistryService_TargetReplicaSetSize" Value="3" />
+      <Parameter Name="TestObservableObserverActor_PartitionCount" Value="3" />
+      <Parameter Name="TestObservableObserverActor_MinReplicaSetSize" Value="2" />
+      <Parameter Name="TestObservableObserverActor_TargetReplicaSetSize" Value="3" />
+      <Parameter Name="TestObservableObserverService_MinReplicaSetSize" Value="2" />
+      <Parameter Name="TestObservableObserverService_PartitionCount" Value="3" />
+      <Parameter Name="TestObservableObserverService_TargetReplicaSetSize" Value="3" />
+      <Parameter Name="Framework_RegistryServiceUri" Value="fabric:/ObserverPattern/RegistryService" />
+      <Parameter Name="Framework_MessageBoxServiceUri" Value="fabric:/ObserverPattern/MessageBoxService" />
+      <Parameter Name="MessageBoxService_MaxQueueSize" Value="1000" />
+   </Parameters>
+</Application>
