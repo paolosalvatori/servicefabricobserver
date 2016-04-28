@@ -82,261 +82,265 @@ The following picture depicts the second message flow implemented by the sample.
 The following table shows the code of the **TestObservableObserverService** class. As you can see, in order to create a stateful reliable service that acts as both an observable and observer, you need to inherit the service class from the **ObservableObserverServiceBase** abstract class contained in the **Framework** project. If you want to define a service that acts only as an observable, the related class needs to inherit from the **ObservableServiceBase** abstract class. Likewise, if you want to create a service that acts only as an observer, the class needs to inherit from the **ObserverServiceBase** abstract class. In order to handle the events exposed by the base class, you need to define event handlers in the class constructor as shown in the code below.
 
 
-	// ------------------------------------------------------------
-	//  Copyright (c) Microsoft Corporation.  All rights reserved.
-	//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-	// ------------------------------------------------------------
-	
-	namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverService
-	{
-	    using System;
-	    using System.Fabric;
-	    using System.Linq;
-	    using System.Text;
-	    using System.Threading.Tasks;
-	    using Microsoft.AzureCat.Samples.ObserverPattern.Entities;
-	    using Microsoft.AzureCat.Samples.ObserverPattern.Framework;
-	
-	    /// <summary>
-	    /// The FabricRuntime creates an instance of this class for each service type instance.
-	    /// </summary>
-	    internal sealed class TestObservableObserverService : ObservableObserverServiceBase
-	    {
-	        #region Public Constructor
-	
-	        /// <summary>
-	        /// Initializes a new instance of the TestObservableObserverService class.
-	        /// </summary>
-	        public TestObservableObserverService(StatefulServiceContext context)
-	            : base(context)
-	        {
-	            try
-	            {
-	                // Create Handlers for Observer Events
-	                this.NotificationMessageReceived += this.TestObservableObserverService_NotificationMessageReceived;
-	                this.ObservableUnregistered += this.TestObservableObserverService_ObservableUnregistered;
-	
-	                // Create Handlers for Observable Events
-	                this.ObserverRegistered += this.TestObservableObserverService_ObserverRegistered;
-	                this.ObserverUnregistered += this.TestObservableObserverService_ObserverUnregistered;
-	                ServiceEventSource.Current.Message("TestObservableObserverService instance created.");
-	            }
-	            catch (Exception ex)
-	            {
-	                ServiceEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        #endregion
-	
-	        #region Observable Event Handlers
-	
-	        private async Task TestObservableObserverService_ObserverRegistered(SubscriptionEventArgs args)
-	        {
-	            try
-	            {
-	                EntityId id = await this.GetEntityIdAsync();
-	                StringBuilder stringBuilder =
-	                    new StringBuilder(
-	                        $"Observer successfully registered.\r\n[Observable]: {id}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
-	                int i = 1;
-	                foreach (string expression in args.FilterExpressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
-	                {
-	                    stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
-	                }
-	                ServiceEventSource.Current.Message(stringBuilder.ToString());
-	            }
-	            catch (Exception ex)
-	            {
-	                ServiceEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        private async Task TestObservableObserverService_ObserverUnregistered(SubscriptionEventArgs args)
-	        {
-	            try
-	            {
-	                EntityId id = await this.GetEntityIdAsync();
-	                ServiceEventSource.Current.Message(
-	                    $"Observer successfully unregistered.\r\n[Observable]: {id}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
-	            }
-	            catch (Exception ex)
-	            {
-	                ServiceEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        #endregion
-	
-	        #region Observer Event Handlers
-	
-	        private async Task TestObservableObserverService_NotificationMessageReceived(NotificationEventArgs<Message> args)
-	        {
-	            try
-	            {
-	                EntityId id = await this.GetEntityIdAsync();
-	                ServiceEventSource.Current.Message(
-	                    $"Message Received.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {id}\r\n[Message]: Topic=[{args.Topic}] Body=[{args.Message?.Body ?? "NULL"}]");
-	            }
-	            catch (Exception ex)
-	            {
-	                ServiceEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        private async Task TestObservableObserverService_ObservableUnregistered(SubscriptionEventArgs args)
-	        {
-	            try
-	            {
-	                EntityId id = await this.GetEntityIdAsync();
-	                ServiceEventSource.Current.Message($"Observable successfully unregistered.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {id}");
-	            }
-	            catch (Exception ex)
-	            {
-	                ServiceEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        #endregion
-	    }
-	}
+```CSharp
+// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverService
+{
+    using System;
+    using System.Fabric;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Microsoft.AzureCat.Samples.ObserverPattern.Entities;
+    using Microsoft.AzureCat.Samples.ObserverPattern.Framework;
+
+    /// <summary>
+    /// The FabricRuntime creates an instance of this class for each service type instance.
+    /// </summary>
+    internal sealed class TestObservableObserverService : ObservableObserverServiceBase
+    {
+        #region Public Constructor
+
+        /// <summary>
+        /// Initializes a new instance of the TestObservableObserverService class.
+        /// </summary>
+        public TestObservableObserverService(StatefulServiceContext context)
+            : base(context)
+        {
+            try
+            {
+                // Create Handlers for Observer Events
+                this.NotificationMessageReceived += this.TestObservableObserverService_NotificationMessageReceived;
+                this.ObservableUnregistered += this.TestObservableObserverService_ObservableUnregistered;
+
+                // Create Handlers for Observable Events
+                this.ObserverRegistered += this.TestObservableObserverService_ObserverRegistered;
+                this.ObserverUnregistered += this.TestObservableObserverService_ObserverUnregistered;
+                ServiceEventSource.Current.Message("TestObservableObserverService instance created.");
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region Observable Event Handlers
+
+        private async Task TestObservableObserverService_ObserverRegistered(SubscriptionEventArgs args)
+        {
+            try
+            {
+                EntityId id = await this.GetEntityIdAsync();
+                StringBuilder stringBuilder =
+                    new StringBuilder(
+                        $"Observer successfully registered.\r\n[Observable]: {id}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
+                int i = 1;
+                foreach (string expression in args.FilterExpressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
+                {
+                    stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
+                }
+                ServiceEventSource.Current.Message(stringBuilder.ToString());
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        private async Task TestObservableObserverService_ObserverUnregistered(SubscriptionEventArgs args)
+        {
+            try
+            {
+                EntityId id = await this.GetEntityIdAsync();
+                ServiceEventSource.Current.Message(
+                    $"Observer successfully unregistered.\r\n[Observable]: {id}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region Observer Event Handlers
+
+        private async Task TestObservableObserverService_NotificationMessageReceived(NotificationEventArgs<Message> args)
+        {
+            try
+            {
+                EntityId id = await this.GetEntityIdAsync();
+                ServiceEventSource.Current.Message(
+                    $"Message Received.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {id}\r\n[Message]: Topic=[{args.Topic}] Body=[{args.Message?.Body ?? "NULL"}]");
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        private async Task TestObservableObserverService_ObservableUnregistered(SubscriptionEventArgs args)
+        {
+            try
+            {
+                EntityId id = await this.GetEntityIdAsync();
+                ServiceEventSource.Current.Message($"Observable successfully unregistered.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {id}");
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
+    }
+}
+```
 
 # TestObservableObserverActor #
 The following table shows the code of the **TestObservableObserverActor** class. As you can see, in order to create a stateful actor service that acts as both an observable and observer, you need to inherit the service class from the **ObservableObserverActorBase** abstract class contained in the **Framework** project. If you want to define a service that acts only as an observable, the related class needs to inherit from the **ObservableActorBase** abstract class. Likewise, if you want to create a service that acts only as an observer, the class needs to inherit from the **ObserverActorBase** abstract class. In order to handle the events exposed by the base class, you need to define event handlers in the class constructor as shown in the code below. The sample also demonstrates that an actor class can implement additional, application-specific service interfaces.
 
-	// ------------------------------------------------------------
-	//  Copyright (c) Microsoft Corporation.  All rights reserved.
-	//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-	// ------------------------------------------------------------
-	
-	namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
-	{
-	    using System;
-	    using System.Linq;
-	    using System.Text;
-	    using System.Threading.Tasks;
-	    using global::Microsoft.AzureCat.Samples.ObserverPattern.Entities;
-	    using global::Microsoft.AzureCat.Samples.ObserverPattern.Framework;
-	    using global::Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor.Interfaces;
-	    using global::Microsoft.ServiceFabric.Actors.Runtime;
-	
-	    [ActorService(Name = "TestObservableObserverActor")]
-	    internal class TestObservableObserverActor : ObservableObserverActorBase, ITestObservableObserverActor
-	    {
-	        #region Public Constructor
-	
-	        /// <summary>
-	        /// Initializes a new instance of the TestObservableObserverActor class.
-	        /// </summary>
-	        public TestObservableObserverActor()
-	        {
-	            // Create Handlers for Observer Events
-	            this.NotificationMessageReceived += this.TestObservableObserverActor_NotificationMessageReceived;
-	            this.ObservableUnregistered += this.TestObservableObserverActor_ObservableUnregistered;
-	
-	            // Create Handlers for Observable Events
-	            this.ObserverRegistered += this.TestObservableObserverActor_ObserverRegistered;
-	            this.ObserverUnregistered += this.TestObservableObserverActor_ObserverUnregistered;
-	
-	            ActorEventSource.Current.Message("TestObservableObserverActor actor created.");
-	        }
-	
-	        #endregion
-	
-	        #region ITestObservableObserverActor methods
-	
-	        public Task ExecuteCommandAsync(string command)
-	        {
-	            try
-	            {
-	                ActorEventSource.Current.Message($"Command Received.\r\n[Command]: [{command ?? "NULL"}]");
-	            }
-	            catch (Exception ex)
-	            {
-	                ActorEventSource.Current.Error(ex);
-	                throw;
-	            }
-	            return Task.FromResult(true);
-	        }
-	
-	        #endregion
-	
-	        #region Observable Event Handlers
-	
-	        private async Task TestObservableObserverActor_ObserverRegistered(SubscriptionEventArgs args)
-	        {
-	            try
-	            {
-	                EntityId entityId = await this.GetEntityIdAsync();
-	                StringBuilder stringBuilder = new StringBuilder($"Observer successfully registered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
-	                int i = 1;
-	                foreach (string expression in args.FilterExpressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
-	                {
-	                    stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
-	                }
-	                ActorEventSource.Current.Message(stringBuilder.ToString());
-	            }
-	            catch (Exception ex)
-	            {
-	                ActorEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        private async Task TestObservableObserverActor_ObserverUnregistered(SubscriptionEventArgs args)
-	        {
-	            try
-	            {
-	                EntityId entityId = await this.GetEntityIdAsync();
-	                ActorEventSource.Current.Message($"Observer successfully unregistered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
-	            }
-	            catch (Exception ex)
-	            {
-	                ActorEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        #endregion
-	
-	        #region Observer Event Handlers
-	
-	        private async Task TestObservableObserverActor_NotificationMessageReceived(NotificationEventArgs<Message> args)
-	        {
-	            try
-	            {
-	                EntityId entityId = await this.GetEntityIdAsync();
-	                ActorEventSource.Current.Message($"Message Received.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {entityId}\r\n[Message]: Topic=[{args.Topic}] Body=[{args.Message?.Body ?? "NULL"}]");
-	            }
-	            catch (Exception ex)
-	            {
-	                ActorEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        private async Task TestObservableObserverActor_ObservableUnregistered(SubscriptionEventArgs args)
-	        {
-	            try
-	            {
-	                EntityId entityId = await this.GetEntityIdAsync();
-	                ActorEventSource.Current.Message($"Observable successfully unregistered.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {entityId}");
-	            }
-	            catch (Exception ex)
-	            {
-	                ActorEventSource.Current.Error(ex);
-	                throw;
-	            }
-	        }
-	
-	        #endregion
-	    }
-	}
+```CSharp
+// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
+{
+    using System;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using global::Microsoft.AzureCat.Samples.ObserverPattern.Entities;
+    using global::Microsoft.AzureCat.Samples.ObserverPattern.Framework;
+    using global::Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor.Interfaces;
+    using global::Microsoft.ServiceFabric.Actors.Runtime;
+
+    [ActorService(Name = "TestObservableObserverActor")]
+    internal class TestObservableObserverActor : ObservableObserverActorBase, ITestObservableObserverActor
+    {
+        #region Public Constructor
+
+        /// <summary>
+        /// Initializes a new instance of the TestObservableObserverActor class.
+        /// </summary>
+        public TestObservableObserverActor()
+        {
+            // Create Handlers for Observer Events
+            this.NotificationMessageReceived += this.TestObservableObserverActor_NotificationMessageReceived;
+            this.ObservableUnregistered += this.TestObservableObserverActor_ObservableUnregistered;
+
+            // Create Handlers for Observable Events
+            this.ObserverRegistered += this.TestObservableObserverActor_ObserverRegistered;
+            this.ObserverUnregistered += this.TestObservableObserverActor_ObserverUnregistered;
+
+            ActorEventSource.Current.Message("TestObservableObserverActor actor created.");
+        }
+
+        #endregion
+
+        #region ITestObservableObserverActor methods
+
+        public Task ExecuteCommandAsync(string command)
+        {
+            try
+            {
+                ActorEventSource.Current.Message($"Command Received.\r\n[Command]: [{command ?? "NULL"}]");
+            }
+            catch (Exception ex)
+            {
+                ActorEventSource.Current.Error(ex);
+                throw;
+            }
+            return Task.FromResult(true);
+        }
+
+        #endregion
+
+        #region Observable Event Handlers
+
+        private async Task TestObservableObserverActor_ObserverRegistered(SubscriptionEventArgs args)
+        {
+            try
+            {
+                EntityId entityId = await this.GetEntityIdAsync();
+                StringBuilder stringBuilder = new StringBuilder($"Observer successfully registered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
+                int i = 1;
+                foreach (string expression in args.FilterExpressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
+                {
+                    stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
+                }
+                ActorEventSource.Current.Message(stringBuilder.ToString());
+            }
+            catch (Exception ex)
+            {
+                ActorEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        private async Task TestObservableObserverActor_ObserverUnregistered(SubscriptionEventArgs args)
+        {
+            try
+            {
+                EntityId entityId = await this.GetEntityIdAsync();
+                ActorEventSource.Current.Message($"Observer successfully unregistered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
+            }
+            catch (Exception ex)
+            {
+                ActorEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region Observer Event Handlers
+
+        private async Task TestObservableObserverActor_NotificationMessageReceived(NotificationEventArgs<Message> args)
+        {
+            try
+            {
+                EntityId entityId = await this.GetEntityIdAsync();
+                ActorEventSource.Current.Message($"Message Received.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {entityId}\r\n[Message]: Topic=[{args.Topic}] Body=[{args.Message?.Body ?? "NULL"}]");
+            }
+            catch (Exception ex)
+            {
+                ActorEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        private async Task TestObservableObserverActor_ObservableUnregistered(SubscriptionEventArgs args)
+        {
+            try
+            {
+                EntityId entityId = await this.GetEntityIdAsync();
+                ActorEventSource.Current.Message($"Observable successfully unregistered.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {entityId}");
+            }
+            catch (Exception ex)
+            {
+                ActorEventSource.Current.Error(ex);
+                throw;
+            }
+        }
+
+        #endregion
+    }
+}
+```
 
 # Monitoring the Test Application on the Local Cluster #
 The observable and observer classes use custom **SourceEvent** classes to generate ETW events. You can use Visual Studio to see streaming events while running the application on the local cluster, as shown in the following picture.
