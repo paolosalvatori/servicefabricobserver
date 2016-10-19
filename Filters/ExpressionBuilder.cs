@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -12,6 +28,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
     using System.Reflection;
     using System.Text.RegularExpressions;
     using Newtonsoft.Json.Linq;
+
+    #endregion
 
     public class ExpressionBuilder<T>
     {
@@ -28,9 +46,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
         private Expression GetExpression(ParameterExpression param, ExpressionFilter filter)
         {
             if (param == null)
-            {
                 throw new ArgumentNullException(nameof(param));
-            }
             if (this.type != typeof(JObject))
             {
                 PropertyInfo propertyInfo =
@@ -79,7 +95,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                     : Expression.Constant(filter.Value);
                 MethodInfo changeTypeMethod = typeof(Convert).GetMethod("ChangeType", new[] {typeof(object), typeof(Type)});
                 Expression value = Expression.Call(changeTypeMethod, member, Expression.Constant(typeof(string)));
-                    //Expression.Call(member, typeof(JToken).GetMethod("ToString", new Type[] { }));
+                //Expression.Call(member, typeof(JToken).GetMethod("ToString", new Type[] { }));
                 value = Expression.Convert(value, typeof(string));
                 if (filter.Value is double)
                 {
@@ -170,9 +186,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
         public Expression<Func<T, bool>> GetExpression(string filterExpression)
         {
             if (string.IsNullOrWhiteSpace(filterExpression))
-            {
                 throw new ArgumentException(FilterExpressionCannotBeNullOrEmpty, FilterExpressionArgument);
-            }
             List<ExpressionFilter> filterList = new List<ExpressionFilter>();
             string[] predicates = Regex.Split(filterExpression, AndPattern, RegexOptions.IgnoreCase);
             Regex propertyRegex = new Regex(PropertyPattern);
@@ -181,18 +195,14 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                 if (string.Compare(predicate, AndOperator, StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     if (filterList.Count == 0)
-                    {
                         throw new ApplicationException(FilterExpressionCannotStartWithLogicalOperator);
-                    }
                     filterList[filterList.Count - 1].LogicalOperator = LogicalOperator.And;
                     continue;
                 }
                 if (string.Compare(predicate, OrOperator, StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     if (filterList.Count == 0)
-                    {
                         throw new ApplicationException(FilterExpressionCannotStartWithLogicalOperator);
-                    }
                     filterList[filterList.Count - 1].LogicalOperator = LogicalOperator.Or;
                     continue;
                 }
@@ -205,9 +215,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                     Operator operatorInfo = GetOperator(op);
 
                     if (string.Compare(value, "null", StringComparison.InvariantCultureIgnoreCase) == 0)
-                    {
                         value = null;
-                    }
 
                     if (this.type != typeof(JObject))
                     {
@@ -217,36 +225,28 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                         if (string.IsNullOrWhiteSpace(property) ||
                             string.IsNullOrWhiteSpace(op) ||
                             string.IsNullOrWhiteSpace(value))
-                        {
                             throw new ApplicationException(string.Format(PredicateInvalid, predicate));
-                        }
 
                         if (propertyInfo == null)
-                        {
                             throw new ApplicationException(string.Format(PropertyDoesNotExist, typeof(T).Name, property));
-                        }
 
                         if (!propertyInfo.PropertyType.IsPrimitive &&
-                            propertyInfo.PropertyType != typeof(string) &&
-                            propertyInfo.PropertyType != typeof(DateTime) &&
-                            propertyInfo.PropertyType != typeof(DateTime?))
-                        {
+                            (propertyInfo.PropertyType != typeof(string)) &&
+                            (propertyInfo.PropertyType != typeof(DateTime)) &&
+                            (propertyInfo.PropertyType != typeof(DateTime?)))
                             throw new ApplicationException(
                                 string.Format(PropertyIsNotPrimitiveOrDateTimeOrString, propertyInfo.PropertyType, propertyInfo.Name));
-                        }
 
                         if (operatorInfo == Operator.Unkwnon)
-                        {
                             throw new ApplicationException(string.Format(OperatorUnknownAndUnsupported, op));
-                        }
 
                         object typedValue;
                         try
                         {
                             typedValue = propertyInfo.PropertyType == typeof(string)
                                 ? GetString(value)
-                                : propertyInfo.PropertyType == typeof(DateTime) ||
-                                  propertyInfo.PropertyType == typeof(DateTime?)
+                                : (propertyInfo.PropertyType == typeof(DateTime)) ||
+                                  (propertyInfo.PropertyType == typeof(DateTime?))
                                     ? Convert.ChangeType(
                                         RemoveDelimiters(value),
                                         Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType)
@@ -267,8 +267,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                     }
                     else
                     {
-                        if ((value?[0] == '\'' && value[value.Length - 1] == '\'') ||
-                            (value?[0] == '"' && value[value.Length - 1] == '"'))
+                        if (((value?[0] == '\'') && (value[value.Length - 1] == '\'')) ||
+                            ((value?[0] == '"') && (value[value.Length - 1] == '"')))
                         {
                             value = value.Substring(1, value.Length - 2);
                             filterList.Add(
@@ -283,7 +283,6 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                         {
                             double typedValue;
                             if (double.TryParse(value, out typedValue))
-                            {
                                 filterList.Add(
                                     new ExpressionFilter
                                     {
@@ -291,9 +290,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                                         Operator = operatorInfo,
                                         Value = typedValue
                                     });
-                            }
                             else
-                            {
                                 filterList.Add(
                                     new ExpressionFilter
                                     {
@@ -301,7 +298,6 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                                         Operator = operatorInfo,
                                         Value = value
                                     });
-                            }
                         }
                     }
                 }
@@ -312,9 +308,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
         public Expression<Func<T, bool>> GetExpression(IList<ExpressionFilter> filterList)
         {
             if (filterList.Count == 0)
-            {
                 throw new ArgumentException(string.Format(CollectionCannotBeNullOrEmpty, FilterListArgument), FilterListArgument);
-            }
 
             ParameterExpression param = Expression.Parameter(typeof(T), "t");
             Expression exp = null;
@@ -345,9 +339,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
                         filterList.Remove(f2);
 
                         if (filterList.Count != 1)
-                        {
                             continue;
-                        }
                         exp = Expression.AndAlso(exp, this.GetExpression(param, filterList[0]));
                         filterList.RemoveAt(0);
                     }
@@ -364,17 +356,11 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
         private BinaryExpression GetExpression(ParameterExpression param, ExpressionFilter filter1, ExpressionFilter filter2)
         {
             if (param == null)
-            {
                 throw new ArgumentNullException(ParamArgument, string.Format(ArgumentCannotBeNull, ParamArgument));
-            }
             if (filter1 == null)
-            {
                 throw new ArgumentNullException(Filter1Argument, string.Format(ArgumentCannotBeNull, Filter1Argument));
-            }
             if (filter2 == null)
-            {
                 throw new ArgumentNullException(Filter2Argument, string.Format(ArgumentCannotBeNull, Filter2Argument));
-            }
             Expression bin1 = this.GetExpression(param, filter1);
             Expression bin2 = this.GetExpression(param, filter2);
             return filter1.LogicalOperator == LogicalOperator.Or
@@ -385,9 +371,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
         private static Operator GetOperator(string op)
         {
             if (string.IsNullOrWhiteSpace(op))
-            {
                 throw new ArgumentException(string.Format(ArgumentCannotBeNullOrEmpty, OpArgument), OpArgument);
-            }
             switch (op.ToLower())
             {
                 case "=":
@@ -420,34 +404,22 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Filters
         private static string GetString(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-            {
                 throw new ArgumentException(string.Format(ArgumentCannotBeNullOrEmpty, ValueArgument), ValueArgument);
-            }
             if (string.Compare(value, NullValue, StringComparison.InvariantCultureIgnoreCase) == 0)
-            {
                 return null;
-            }
-            if (value.Length >= 2 &&
-                (value[0] == '\'' && value[value.Length - 1] == '\'') ||
-                (value[0] == '"' && value[value.Length - 1] == '"'))
-            {
+            if (((value.Length >= 2) && (value[0] == '\'') && (value[value.Length - 1] == '\'')) ||
+                ((value[0] == '"') && (value[value.Length - 1] == '"')))
                 return value.Length == 2 ? string.Empty : value.Substring(1, value.Length - 2);
-            }
             throw new ApplicationException(string.Format(StringNotDelimited, value));
         }
 
         private static string RemoveDelimiters(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-            {
                 throw new ArgumentException(string.Format(ArgumentCannotBeNullOrEmpty, ValueArgument), ValueArgument);
-            }
-            if (value.Length >= 2 &&
-                (value[0] == '\'' && value[value.Length - 1] == '\'') ||
-                (value[0] == '"' && value[value.Length - 1] == '"'))
-            {
+            if (((value.Length >= 2) && (value[0] == '\'') && (value[value.Length - 1] == '\'')) ||
+                ((value[0] == '"') && (value[value.Length - 1] == '"')))
                 return value.Length == 2 ? string.Empty : value.Substring(1, value.Length - 2);
-            }
             return value;
         }
 

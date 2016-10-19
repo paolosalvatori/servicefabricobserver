@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Fabric;
@@ -16,11 +32,21 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
 
+    #endregion
+
     /// <summary>
-    /// The FabricRuntime creates an instance of this class for each service type instance. 
+    ///     The FabricRuntime creates an instance of this class for each service type instance.
     /// </summary>
     internal sealed class GatewayService : StatelessService
     {
+        #region Public Constructor
+
+        public GatewayService(StatelessServiceContext serviceContext) : base(serviceContext)
+        {
+        }
+
+        #endregion
+
         #region Private Methods
 
         private void ReadSettings()
@@ -40,43 +66,37 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                 // Read the ServiceRelativePath setting from the Settings.xml file
                 if (section.Parameters.Any(
                     p => string.Compare(
-                        p.Name,
-                        ServiceRelativePathParameter,
-                        StringComparison.InvariantCultureIgnoreCase) == 0))
+                             p.Name,
+                             ServiceRelativePathParameter,
+                             StringComparison.InvariantCultureIgnoreCase) == 0))
                 {
                     ConfigurationProperty parameter = section.Parameters[ServiceRelativePathParameter];
                     if (!string.IsNullOrWhiteSpace(parameter?.Value))
-                    {
                         this.serviceRelativePath = parameter.Value;
-                    }
                 }
 
                 // Read the MaxQueryRetryCount setting from the Settings.xml file
                 if (section.Parameters.Any(
                     p => string.Compare(
-                        p.Name,
-                        MaxQueryRetryCountParameter,
-                        StringComparison.InvariantCultureIgnoreCase) == 0))
+                             p.Name,
+                             MaxQueryRetryCountParameter,
+                             StringComparison.InvariantCultureIgnoreCase) == 0))
                 {
                     ConfigurationProperty parameter = section.Parameters[MaxQueryRetryCountParameter];
                     if (!string.IsNullOrWhiteSpace(parameter?.Value))
-                    {
                         int.TryParse(parameter.Value, out this.maxRetryCount);
-                    }
                 }
 
                 // Read the BackoffDelay setting from the Settings.xml file
                 if (section.Parameters.Any(
                     p => string.Compare(
-                        p.Name,
-                        BackoffDelayParameter,
-                        StringComparison.InvariantCultureIgnoreCase) == 0))
+                             p.Name,
+                             BackoffDelayParameter,
+                             StringComparison.InvariantCultureIgnoreCase) == 0))
                 {
                     ConfigurationProperty parameter = section.Parameters[BackoffDelayParameter];
                     if (!string.IsNullOrWhiteSpace(parameter?.Value))
-                    {
                         int.TryParse(parameter.Value, out this.backoffDelay);
-                    }
                 }
             }
             catch (KeyNotFoundException ex)
@@ -126,7 +146,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
         #region StatelessService Protected Methods
 
         /// <summary>
-        /// Optional override to create listeners (like tcp, http) for this service instance.
+        ///     Optional override to create listeners (like tcp, http) for this service instance.
         /// </summary>
         /// <returns>The collection of listeners.</returns>
         protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
@@ -148,9 +168,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Message(e.Message);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -164,25 +182,16 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
         }
 
         /// <summary>
-        /// This is the main entry point for your service instance.
+        ///     This is the main entry point for your service instance.
         /// </summary>
         /// <param name="cancelServiceInstance">Canceled when Service Fabric terminates this instance.</param>
         protected override async Task RunAsync(CancellationToken cancelServiceInstance)
         {
             // This service instance continues processing until the instance is terminated.
             while (!cancelServiceInstance.IsCancellationRequested)
-            {
-                // Pause for 1 second before continue processing.
                 await Task.Delay(TimeSpan.FromSeconds(1), cancelServiceInstance);
-            }
         }
 
-        #endregion
-
-        #region Public Constructor
-        public GatewayService(StatelessServiceContext serviceContext) : base(serviceContext)
-        {
-        } 
         #endregion
     }
 }

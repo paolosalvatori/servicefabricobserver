@@ -1,15 +1,33 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
 {
+    #region Using Directives
+
     using System;
     using System.Diagnostics.Tracing;
     using System.IO;
     using System.Runtime.CompilerServices;
     using Microsoft.ServiceFabric.Actors.Runtime;
+
+    #endregion
 
     [EventSource(Name = "ObserverPattern-Framework-Actor")]
     public sealed class ActorEventSource : EventSource
@@ -20,9 +38,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void Message(string message, [CallerFilePath] string source = "", [CallerMemberName] string method = "")
         {
             if (!this.IsEnabled())
-            {
                 return;
-            }
             this.WriteEvent(1, $"[{GetClassFromFilePath(source) ?? "UNKNOWN"}::{method ?? "UNKNOWN"}] {message}");
         }
 
@@ -30,9 +46,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void ActorMessage(Actor actor, string message, [CallerFilePath] string source = "", [CallerMemberName] string method = "", params object[] args)
         {
             if (!this.IsEnabled())
-            {
                 return;
-            }
             string finalMessage = string.Format(message, args);
             this.ActorMessage(
                 actor.GetType().ToString(),
@@ -53,18 +67,14 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void ActorHostInitializationFailed(Exception e, [CallerFilePath] string source = "", [CallerMemberName] string method = "")
         {
             if (this.IsEnabled())
-            {
                 this.ActorHostInitializationFailed(e.ToString(), GetClassFromFilePath(source) ?? "UNKNOWN", method ?? "UNKNOWN");
-            }
         }
 
         [NonEvent]
         public void Error(Exception e, [CallerFilePath] string source = "", [CallerMemberName] string method = "")
         {
             if (this.IsEnabled())
-            {
                 this.Error($"[{GetClassFromFilePath(source) ?? "UNKNOWN"}::{method ?? "UNKNOWN"}] {e}");
-            }
         }
 
         [Event(2, Level = EventLevel.Informational, Message = "{11}")]
@@ -113,9 +123,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         private static string GetClassFromFilePath(string sourceFilePath)
         {
             if (string.IsNullOrWhiteSpace(sourceFilePath))
-            {
                 return null;
-            }
             FileInfo file = new FileInfo(sourceFilePath);
             return Path.GetFileNameWithoutExtension(file.Name);
         }

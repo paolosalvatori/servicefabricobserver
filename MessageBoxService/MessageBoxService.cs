@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Fabric;
@@ -21,18 +37,55 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
     using Microsoft.ServiceFabric.Services.Remoting.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
 
+    #endregion
+
     /// <summary>
-    /// The FabricRuntime creates an instance of this class for each service type instance.
+    ///     The FabricRuntime creates an instance of this class for each service type instance.
     /// </summary>
     internal sealed class MessageBoxService : StatefulService, IMessageBoxService
     {
         #region Private Static Fields
+
         private static int MaxQueueSize = DefaultMaxQueueSize;
+
         #endregion
-        
+
+        #region Private Methods
+
+        private void ReadSettings()
+        {
+            try
+            {
+                // Read settings from the DeviceActorServiceConfig section in the Settings.xml file
+                ICodePackageActivationContext activationContext = this.Context.CodePackageActivationContext;
+                ConfigurationPackage config = activationContext.GetConfigurationPackageObject(ConfigurationPackage);
+                ConfigurationSection section = config.Settings.Sections[ConfigurationSection];
+
+                // Read the MaxQueueSize setting from the Settings.xml file
+                if (section.Parameters.Any(
+                    p => string.Compare(
+                             p.Name,
+                             MaxQueueSizeParameter,
+                             StringComparison.InvariantCultureIgnoreCase) == 0))
+                {
+                    ConfigurationProperty parameter = section.Parameters[MaxQueueSizeParameter];
+                    if (!string.IsNullOrWhiteSpace(parameter?.Value))
+                        int.TryParse(parameter.Value, out MaxQueueSize);
+                }
+                ServiceEventSource.Current.Message($"[{MaxQueueSizeParameter}] = [{MaxQueueSize}]");
+            }
+            catch (KeyNotFoundException)
+            {
+                ActorEventSource.Current.Message($"[{MaxQueueSizeParameter}] = [{MaxQueueSize}]");
+            }
+        }
+
+        #endregion
+
         #region StatefulService Overriden Methods
+
         /// <summary>
-        /// Optional override to create listeners (like tcp, http) for this service replica.
+        ///     Optional override to create listeners (like tcp, http) for this service replica.
         /// </summary>
         /// <returns>The collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
@@ -46,16 +99,17 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
         }
 
         /// <summary>
-        /// Run a background processing task on the partition's primary replica.
+        ///     Run a background processing task on the partition's primary replica.
         /// </summary>
-        /// <param name="cancellationToken">The token to monitor for cancellation requests. Implementers should take special care to honor the cancellationToken promptly, as delay in doing so may impact service availability.</param>
+        /// <param name="cancellationToken">
+        ///     The token to monitor for cancellation requests. Implementers should take special care
+        ///     to honor the cancellationToken promptly, as delay in doing so may impact service availability.
+        /// </param>
         /// <returns>A task that represents the background processing operation.</returns>
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
-            {
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-            }
         }
 
         #endregion
@@ -63,16 +117,14 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
         #region IMessageBoxService Methods
 
         /// <summary>
-        /// Read messages stored for an observer.
+        ///     Read messages stored for an observer.
         /// </summary>
         /// <param name="uri">Observer uri.</param>
         /// <returns>An enumerable containing messages for the observer.</returns>
         public async Task<IEnumerable<Message>> ReadMessagesAsync(Uri uri)
         {
             if (uri == null)
-            {
                 throw new ArgumentException($"The {nameof(uri)} parameter cannot be null.", nameof(uri));
-            }
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
                 try
@@ -99,9 +151,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -115,27 +165,21 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
         }
 
         /// <summary>
-        /// Write messages for an observer.
+        ///     Write messages for an observer.
         /// </summary>
-        /// <param name="uri">Observer uri.</param>    
+        /// <param name="uri">Observer uri.</param>
         /// <param name="messages">A collection of messages.</param>
         /// <returns>The asynchronous result of the operation.</returns>
         public async Task WriteMessagesAsync(Uri uri, IEnumerable<Message> messages)
         {
             if (uri == null)
-            {
                 throw new ArgumentException($"The {nameof(uri)} parameter cannot be null.", nameof(uri));
-            }
 
             List<Message> messageList = messages as List<Message> ?? messages.ToList();
-            if (messages == null || !messageList.Any())
-            {
+            if ((messages == null) || !messageList.Any())
                 return;
-            }
             if (messageList.Count >= MaxQueueSize)
-            {
                 throw new ArgumentException("The queue has reached its maximum capacity.", $"{nameof(messageList)}");
-            }
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
                 try
@@ -151,9 +195,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
                             (key, list) =>
                             {
                                 if (list.Count + messageList.Count >= MaxQueueSize)
-                                {
                                     throw new ArgumentException("The queue has reached its maximum capacity.", $"{nameof(messageList)}");
-                                }
                                 list.AddRange(messageList);
                                 return list;
                             });
@@ -165,16 +207,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
                 {
                     ServiceEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw new TimeoutException(Constants.RetryTimeoutExhausted);
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -185,37 +223,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
                 await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
             }
         }
-        #endregion
 
-        #region Private Methods
-
-        private void ReadSettings()
-        {
-            try
-            {
-                // Read settings from the DeviceActorServiceConfig section in the Settings.xml file
-                ICodePackageActivationContext activationContext = this.Context.CodePackageActivationContext;
-                ConfigurationPackage config = activationContext.GetConfigurationPackageObject(ConfigurationPackage);
-                ConfigurationSection section = config.Settings.Sections[ConfigurationSection];
-
-                // Read the MaxQueueSize setting from the Settings.xml file
-                if (section.Parameters.Any(p => string.Compare(p.Name,
-                                                               MaxQueueSizeParameter,
-                                                               StringComparison.InvariantCultureIgnoreCase) == 0))
-                {
-                    ConfigurationProperty parameter = section.Parameters[MaxQueueSizeParameter];
-                    if (!string.IsNullOrWhiteSpace(parameter?.Value))
-                    {
-                        int.TryParse(parameter.Value, out MaxQueueSize);
-                    }
-                }
-                ServiceEventSource.Current.Message($"[{MaxQueueSizeParameter}] = [{MaxQueueSize}]");
-            }
-            catch (KeyNotFoundException)
-            {
-                ActorEventSource.Current.Message($"[{MaxQueueSizeParameter}] = [{MaxQueueSize}]");
-            }
-        }
         #endregion
 
         #region Private Constants
@@ -235,13 +243,16 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.MessageBoxService
         #endregion
 
         #region Public Constructors
+
         public MessageBoxService(StatefulServiceContext serviceContext) : base(serviceContext)
         {
         }
 
-        public MessageBoxService(StatefulServiceContext serviceContext, IReliableStateManagerReplica reliableStateManagerReplica) : base(serviceContext, reliableStateManagerReplica)
+        public MessageBoxService(StatefulServiceContext serviceContext, IReliableStateManagerReplica reliableStateManagerReplica)
+            : base(serviceContext, reliableStateManagerReplica)
         {
-        } 
+        }
+
         #endregion
     }
 }

@@ -1,16 +1,34 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
 {
+    #region Using Directives
+
     using System;
     using System.Diagnostics.Tracing;
     using System.Fabric;
     using System.IO;
     using System.Runtime.CompilerServices;
     using Microsoft.ServiceFabric.Services.Runtime;
+
+    #endregion
 
     [EventSource(Name = "ObserverPattern-Framework-Service")]
     public sealed class ServiceEventSource : EventSource
@@ -21,9 +39,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void Message(string message, [CallerFilePath] string source = "", [CallerMemberName] string method = "")
         {
             if (!this.IsEnabled())
-            {
                 return;
-            }
             this.WriteEvent(1, $"[{GetClassFromFilePath(source) ?? "UNKNOWN"}::{method ?? "UNKNOWN"}] {message}");
         }
 
@@ -31,9 +47,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void ServiceMessage(StatelessService service, string message, params object[] args)
         {
             if (!this.IsEnabled())
-            {
                 return;
-            }
             string finalMessage = string.Format(message, args);
             this.ServiceMessage(
                 service.Context.ServiceName.ToString(),
@@ -50,9 +64,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void ServiceMessage(StatefulService service, string message, params object[] args)
         {
             if (!this.IsEnabled())
-            {
                 return;
-            }
             string finalMessage = string.Format(message, args);
             this.ServiceMessage(
                 service.Context.ServiceName.ToString(),
@@ -81,9 +93,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public void Error(Exception e, [CallerFilePath] string source = "", [CallerMemberName] string method = "")
         {
             if (this.IsEnabled())
-            {
                 this.Error($"[{GetClassFromFilePath(source) ?? "UNKNOWN"}::{method ?? "UNKNOWN"}] {e}");
-            }
         }
 
         [Event(2, Level = EventLevel.Informational, Message = "{7}")]
@@ -98,9 +108,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
             string message)
         {
             if (this.IsEnabled())
-            {
                 this.WriteEvent(2, serviceName, serviceTypeName, replicaOrInstanceId, partitionId, applicationName, applicationTypeName, nodeName, message);
-            }
         }
 
         [Event(4, Level = EventLevel.Error, Message = "Service host initialization failed")]
@@ -118,9 +126,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         private static string GetClassFromFilePath(string sourceFilePath)
         {
             if (string.IsNullOrWhiteSpace(sourceFilePath))
-            {
                 return null;
-            }
             FileInfo file = new FileInfo(sourceFilePath);
             return Path.GetFileNameWithoutExtension(file.Name);
         }

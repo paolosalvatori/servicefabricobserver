@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "ObserverPatternApplication", "ObservableObserver\ObserverPatternApplication.sfproj", "{B84C62C7-467A-429C-9387-3DEB6DD79F7F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObservableObserverApplication.TestClient", "ObservableObserver.TestClient\ObservableObserverApplication.TestClient.csproj", "{09B5643E-F211-4B3C-A5B2-F0D2CD05865A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "Entities\Entities.csproj", "{7B018887-2AB5-46F9-A8F2-11F145B7DD24}"
@@ -54,6 +52,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReSharperSettings", "ReShar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayService", "GatewayService\GatewayService.csproj", "{4E29044B-4250-42DD-9619-41D5359FF447}"
 EndProject
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "ObserverPatternApplication", "ObserverPatternApplication\ObserverPatternApplication.sfproj", "{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,14 +62,6 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Debug|x64.ActiveCfg = Debug|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Debug|x64.Build.0 = Debug|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Debug|x64.Deploy.0 = Debug|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Release|Any CPU.ActiveCfg = Release|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Release|x64.ActiveCfg = Release|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Release|x64.Build.0 = Release|x64
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F}.Release|x64.Deploy.0 = Release|x64
 		{09B5643E-F211-4B3C-A5B2-F0D2CD05865A}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{09B5643E-F211-4B3C-A5B2-F0D2CD05865A}.Debug|x64.ActiveCfg = Debug|x64
 		{09B5643E-F211-4B3C-A5B2-F0D2CD05865A}.Debug|x64.Build.0 = Debug|x64
@@ -142,12 +134,19 @@ Global
 		{4E29044B-4250-42DD-9619-41D5359FF447}.Release|Any CPU.ActiveCfg = Release|x64
 		{4E29044B-4250-42DD-9619-41D5359FF447}.Release|x64.ActiveCfg = Release|x64
 		{4E29044B-4250-42DD-9619-41D5359FF447}.Release|x64.Build.0 = Release|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Debug|x64.ActiveCfg = Debug|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Debug|x64.Build.0 = Debug|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Debug|x64.Deploy.0 = Debug|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Release|Any CPU.ActiveCfg = Release|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Release|x64.ActiveCfg = Release|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Release|x64.Build.0 = Release|x64
+		{E2CC612F-D7DA-414C-8EB0-18D27F4D3F30}.Release|x64.Deploy.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{B84C62C7-467A-429C-9387-3DEB6DD79F7F} = {89A455CB-0FB9-4486-BF4E-4E5BBAEEAE29}
 		{09B5643E-F211-4B3C-A5B2-F0D2CD05865A} = {06EC73C1-3AA2-462C-B952-43CA675393BD}
 		{7B018887-2AB5-46F9-A8F2-11F145B7DD24} = {89A455CB-0FB9-4486-BF4E-4E5BBAEEAE29}
 		{D33DC6C4-BBAA-4E0C-9A7F-AA8A58394B53} = {89A455CB-0FB9-4486-BF4E-4E5BBAEEAE29}

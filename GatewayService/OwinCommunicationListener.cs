@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
 {
+    #region Using Directives
+
     using System;
     using System.Fabric;
     using System.Fabric.Description;
@@ -16,6 +32,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
     using Microsoft.AzureCat.Samples.ObserverPattern.Framework;
     using Microsoft.Owin.Hosting;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
+
+    #endregion
 
     public class OwinCommunicationListener : ICommunicationListener
     {
@@ -30,23 +48,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
 
         #endregion
 
-        #region Public Static Properties
-
-        public static Uri RegistryServiceUri { get; private set; }
-        public static Uri MessageBoxServiceUri { get; private set; }
-        public static int RegistryServicePartitionCount { get; private set; }
-        public static int MessageBoxServicePartitionCount { get; private set; }
-
-        #endregion
-
         #region Private Methods
 
         private void StopWebServer()
         {
             if (this.serverHandle == null)
-            {
                 return;
-            }
             try
             {
                 this.serverHandle.Dispose();
@@ -56,6 +63,18 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                 // no-op
             }
         }
+
+        #endregion
+
+        #region Public Static Properties
+
+        public static Uri RegistryServiceUri { get; private set; }
+
+        public static Uri MessageBoxServiceUri { get; private set; }
+
+        public static int RegistryServicePartitionCount { get; private set; }
+
+        public static int MessageBoxServicePartitionCount { get; private set; }
 
         #endregion
 
@@ -95,15 +114,13 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                 // Read the MessageBoxServiceUri setting from the Settings.xml file
                 if (section.Parameters.Any(
                     p => string.Compare(
-                        p.Name,
-                        MessageBoxServiceUriParameter,
-                        StringComparison.InvariantCultureIgnoreCase) == 0))
+                             p.Name,
+                             MessageBoxServiceUriParameter,
+                             StringComparison.InvariantCultureIgnoreCase) == 0))
                 {
                     ConfigurationProperty parameter = section.Parameters[MessageBoxServiceUriParameter];
                     if (!string.IsNullOrWhiteSpace(parameter?.Value))
-                    {
                         MessageBoxServiceUri = new Uri(parameter.Value);
-                    }
                 }
                 else
                 {
@@ -114,15 +131,13 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                 // Read the RegistryServiceUri setting from the Settings.xml file
                 if (section.Parameters.Any(
                     p => string.Compare(
-                        p.Name,
-                        RegistryServiceUriParameter,
-                        StringComparison.InvariantCultureIgnoreCase) == 0))
+                             p.Name,
+                             RegistryServiceUriParameter,
+                             StringComparison.InvariantCultureIgnoreCase) == 0))
                 {
                     ConfigurationProperty parameter = section.Parameters[RegistryServiceUriParameter];
                     if (!string.IsNullOrWhiteSpace(parameter?.Value))
-                    {
                         RegistryServiceUri = new Uri(parameter.Value);
-                    }
                 }
                 else
                 {
@@ -133,11 +148,11 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                 FabricClient fabricClient = new FabricClient();
 
                 ServicePartitionList list = fabricClient.QueryManager.GetPartitionListAsync(RegistryServiceUri).Result;
-                RegistryServicePartitionCount = list != null && list.Any() ? list.Count : 1;
+                RegistryServicePartitionCount = (list != null) && list.Any() ? list.Count : 1;
                 ActorEventSource.Current.Message($"[{nameof(RegistryServicePartitionCount)}] = [{RegistryServicePartitionCount}]");
 
                 list = fabricClient.QueryManager.GetPartitionListAsync(MessageBoxServiceUri).Result;
-                MessageBoxServicePartitionCount = list != null && list.Any() ? list.Count : 1;
+                MessageBoxServicePartitionCount = (list != null) && list.Any() ? list.Count : 1;
                 ActorEventSource.Current.Message($"[{nameof(MessageBoxServicePartitionCount)}] = [{MessageBoxServicePartitionCount}]");
 
                 EndpointResourceDescription serviceEndpoint = this.statelessServiceContext.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
@@ -147,8 +162,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
                     CultureInfo.InvariantCulture,
                     "http://+:{0}/{1}",
                     port,
-                    String.IsNullOrWhiteSpace(this.appRoot)
-                        ? String.Empty
+                    string.IsNullOrWhiteSpace(this.appRoot)
+                        ? string.Empty
                         : this.appRoot.TrimEnd('/') + '/');
 
                 this.serverHandle = WebApp.Start(this.listeningAddress, appBuilder => this.startup.Configuration(appBuilder));
@@ -162,9 +177,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
             {
                 ServiceEventSource.Current.Message(ex.Message);
                 if (!string.IsNullOrWhiteSpace(ex.InnerException?.Message))
-                {
                     ServiceEventSource.Current.Message(ex.InnerException.Message);
-                }
                 throw;
             }
         }

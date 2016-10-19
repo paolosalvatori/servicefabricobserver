@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Fabric;
@@ -23,16 +39,10 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
     using Microsoft.ServiceFabric.Services.Remoting.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
 
+    #endregion
+
     public abstract class ObserverServiceBase : StatefulService, IClientObserverService, IServerObserverService
     {
-        #region Public Events
-
-        public event Func<NotificationEventArgs<Message>, Task> NotificationMessageReceived;
-
-        public event Func<SubscriptionEventArgs, Task> ObservableUnregistered;
-
-        #endregion
-
         #region Protected Constructor
 
         protected ObserverServiceBase(StatefulServiceContext context)
@@ -43,10 +53,68 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
 
         #endregion
 
+        #region IEntityIdService methods
+
+        /// <summary>
+        ///     Gets the EntityId.
+        /// </summary>
+        /// <returns>The actor entity id.</returns>
+        /// <summary>
+        ///     Gets the EntityId.
+        /// </summary>
+        /// <returns>The actor entity id.</returns>
+        public async Task<EntityId> GetEntityIdAsync()
+        {
+            for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
+            {
+                try
+                {
+                    EntityId entityId = null;
+                    IReliableDictionary<string, EntityId> entityIdDictionary =
+                        this.StateManager.GetOrAddAsync<IReliableDictionary<string, EntityId>>(Constants.EntityIdDictionary).Result;
+                    using (ITransaction transaction = this.StateManager.CreateTransaction())
+                    {
+                        ConditionalValue<EntityId> result = await entityIdDictionary.TryGetValueAsync(transaction, Constants.EntityIdKey);
+                        if (result.HasValue)
+                            entityId = result.Value;
+                        transaction.CommitAsync().Wait();
+                    }
+                    return entityId;
+                }
+                catch (FabricTransientException ex)
+                {
+                    ServiceEventSource.Current.Error(ex);
+                }
+                catch (AggregateException ex)
+                {
+                    foreach (Exception e in ex.InnerExceptions)
+                        ServiceEventSource.Current.Error(e);
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.Error(ex);
+                    throw;
+                }
+                await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
+            }
+            throw new TimeoutException(Constants.RetryTimeoutExhausted);
+        }
+
+        #endregion
+
+        #region Public Events
+
+        public event Func<NotificationEventArgs<Message>, Task> NotificationMessageReceived;
+
+        public event Func<SubscriptionEventArgs, Task> ObservableUnregistered;
+
+        #endregion
+
         #region StatefulService overriden methods
 
         /// <summary>
-        /// Optional override to create listeners (like tcp, http) for this service replica.
+        ///     Optional override to create listeners (like tcp, http) for this service replica.
         /// </summary>
         /// <returns>The collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
@@ -68,9 +136,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -84,14 +150,16 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         }
 
         /// <summary>
-        /// Run a background processing task on the partition's primary replica.
+        ///     Run a background processing task on the partition's primary replica.
         /// </summary>
-        /// <param name="cancellationToken">The token to monitor for cancellation requests. Implementers should take special care to honor the cancellationToken promptly, as delay in doing so may impact service availability.</param>
+        /// <param name="cancellationToken">
+        ///     The token to monitor for cancellation requests. Implementers should take special care
+        ///     to honor the cancellationToken promptly, as delay in doing so may impact service availability.
+        /// </param>
         /// <returns>A task that represents the background processing operation.</returns>
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
-            {
                 try
                 {
                     EntityId entityId;
@@ -101,7 +169,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                             entityId = new EntityId(this.Context.ServiceName);
                             break;
                         case ServicePartitionKind.Int64Range:
-                            Int64RangePartitionInformation in64Range = (Int64RangePartitionInformation)this.Partition.PartitionInfo;
+                            Int64RangePartitionInformation in64Range = (Int64RangePartitionInformation) this.Partition.PartitionInfo;
                             entityId = new EntityId(in64Range.LowKey, this.Context.ServiceName);
                             break;
                         default:
@@ -124,9 +192,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -134,71 +200,16 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                     ServiceEventSource.Current.Error(ex);
                     throw;
                 }
-            }
             while (!cancellationToken.IsCancellationRequested)
-            {
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-            }
         }
 
-        #endregion
-
-        #region IEntityIdService methods
-
-        /// <summary>
-        /// Gets the EntityId.
-        /// </summary>
-        /// <returns>The actor entity id.</returns>
-        /// <summary>
-        /// Gets the EntityId.
-        /// </summary>
-        /// <returns>The actor entity id.</returns>
-        public async Task<EntityId> GetEntityIdAsync()
-        {
-            for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
-            {
-                try
-                {
-                    EntityId entityId = null;
-                    IReliableDictionary<string, EntityId> entityIdDictionary =
-                        this.StateManager.GetOrAddAsync<IReliableDictionary<string, EntityId>>(Constants.EntityIdDictionary).Result;
-                    using (ITransaction transaction = this.StateManager.CreateTransaction())
-                    {
-                        ConditionalValue<EntityId> result = await entityIdDictionary.TryGetValueAsync(transaction, Constants.EntityIdKey);
-                        if (result.HasValue)
-                        {
-                            entityId = result.Value;
-                        }
-                        transaction.CommitAsync().Wait();
-                    }
-                    return entityId;
-                }
-                catch (FabricTransientException ex)
-                {
-                    ServiceEventSource.Current.Error(ex);
-                }
-                catch (AggregateException ex)
-                {
-                    foreach (Exception e in ex.InnerExceptions)
-                    {
-                        ServiceEventSource.Current.Error(e);
-                    }
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    ServiceEventSource.Current.Error(ex);
-                    throw;
-                }
-                await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
-            }
-            throw new TimeoutException(Constants.RetryTimeoutExhausted);
-        }
         #endregion
 
         #region IClientObserverService methods
+
         /// <summary>
-        /// Registers an observer. This methods is invoked by an observer.
+        ///     Registers an observer. This methods is invoked by an observer.
         /// </summary>
         /// <param name="topic">The topic.</param>
         /// <param name="filterExpressions">Specifies filter expressions.</param>
@@ -208,13 +219,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public async Task RegisterObserverServiceAsync(string topic, IEnumerable<string> filterExpressions, EntityId entityId)
         {
             if (string.IsNullOrWhiteSpace(topic))
-            {
                 throw new ArgumentException($"The {nameof(topic)} parameter cannot be null.", nameof(topic));
-            }
             if (entityId == null)
-            {
                 throw new ArgumentException($"The {nameof(entityId)} parameter cannot be null.", nameof(entityId));
-            }
             IList<string> expressions = filterExpressions as IList<string> ?? filterExpressions.ToList();
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
@@ -240,9 +247,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                         ConditionalValue<Dictionary<Uri, EntityId>> result = await topicsDictionary.TryGetValueAsync(transaction, topic);
                         Dictionary<Uri, EntityId> observables = result.HasValue ? result.Value : new Dictionary<Uri, EntityId>();
                         if (!observables.ContainsKey(entityId.EntityUri))
-                        {
                             observables.Add(entityId.EntityUri, entityId);
-                        }
                         await topicsDictionary.AddOrUpdateAsync(transaction, topic, e => observables, (e, s) => observables);
                         await transaction.CommitAsync();
                     }
@@ -251,9 +256,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                             $"Observer successfully registered.\r\n[Observable]: {entityId}\r\n[Observer]: {id}\r\n[Subscription]: Topic=[{topic}]");
                     int i = 1;
                     foreach (string expression in expressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
-                    {
                         stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
-                    }
                     ServiceEventSource.Current.Message(stringBuilder.ToString());
                     return;
                 }
@@ -264,9 +267,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -280,7 +281,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         }
 
         /// <summary>
-        /// Unregisters an observer. This methods is invoked by an observer.
+        ///     Unregisters an observer. This methods is invoked by an observer.
         /// </summary>
         /// <param name="topic">The topic.</param>
         /// <param name="entityId">The entity id of the observable.</param>
@@ -289,13 +290,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public async Task UnregisterObserverServiceAsync(string topic, EntityId entityId)
         {
             if (string.IsNullOrWhiteSpace(topic))
-            {
                 throw new ArgumentException($"The {nameof(topic)} parameter cannot be null.", nameof(topic));
-            }
             if (entityId == null)
-            {
                 throw new ArgumentException($"The {nameof(entityId)} parameter cannot be null.", nameof(entityId));
-            }
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
                 try
@@ -310,10 +307,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                         {
                             Dictionary<Uri, EntityId> observables = result.Value;
                             if (!observables.ContainsKey(entityId.EntityUri))
-                            {
                                 ServiceEventSource.Current.Message(
                                     $"Observer not registered to the specified observable.\r\n[Observable]: {entityId}\r\n[Observer]: {id}\r\n[Publication]: Topic=[{topic}]");
-                            }
                             if (entityId.Kind == EntityKind.Actor)
                             {
                                 IServerObservableActor actorProxy = ActorProxy.Create<IServerObservableActor>(entityId.ActorId, entityId.ServiceUri);
@@ -328,13 +323,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                             }
                             observables.Remove(entityId.EntityUri);
                             if (observables.Any())
-                            {
                                 await topicsDictionary.AddOrUpdateAsync(transaction, topic, e => observables, (e, s) => observables);
-                            }
                             else
-                            {
                                 await topicsDictionary.TryRemoveAsync(transaction, topic);
-                            }
                         }
                         else
                         {
@@ -354,9 +345,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -370,7 +359,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         }
 
         /// <summary>
-        /// Unregisters an observer service partition from all observables on all topics.
+        ///     Unregisters an observer service partition from all observables on all topics.
         /// </summary>
         /// <returns>The asynchronous result of the operation.</returns>
         public async Task ClearSubscriptionsAsync()
@@ -400,9 +389,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
             catch (AggregateException ex)
             {
                 foreach (Exception e in ex.InnerExceptions)
-                {
                     ServiceEventSource.Current.Error(e);
-                }
             }
             catch (Exception ex)
             {
@@ -411,7 +398,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         }
 
         /// <summary>
-        /// Reads the messages for the observer actor from its messagebox.
+        ///     Reads the messages for the observer actor from its messagebox.
         /// </summary>
         /// <returns>The messages for the current observer actor.</returns>
         public virtual async Task<IEnumerable<Message>> ReadMessagesFromMessageBoxAsync()
@@ -419,21 +406,17 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
             EntityId id = await this.GetEntityIdAsync();
             IEnumerable<Message> messages = await ProcessingHelper.ReadMessagesFromMessageBoxAsync(id.EntityUri);
             if (messages == null)
-            {
                 return null;
-            }
             StringBuilder stringBuilder = new StringBuilder($"Messages read from the MessageBox.\r\n[Observer]: {id}");
             int i = 1;
             foreach (Message message in messages)
-            {
                 stringBuilder.Append($"\r\nMessage[{i++}]=[{message.Body}]");
-            }
             ServiceEventSource.Current.Message(stringBuilder.ToString());
             return messages;
         }
 
         /// <summary>
-        /// Used by an observable to send an heartbeat message to an observer. 
+        ///     Used by an observable to send an heartbeat message to an observer.
         /// </summary>
         /// <param name="entityId">The entity id of the observable.</param>
         /// <returns>The asynchronous result of the operation.</returns>
@@ -441,17 +424,22 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         {
             throw new NotImplementedException();
         }
+
         #endregion
 
         #region IServerObserverService
+
         /// <summary>
-        /// Provides the observer with new data. This method is invoked by an observable.
+        ///     Provides the observer with new data. This method is invoked by an observable.
         /// </summary>
         /// <param name="topic">The topic.</param>
         /// <param name="message">The current notification information.</param>
         /// <param name="entityId">The entity id of the observable.</param>
-        /// <param name="observers">A list of observers in the same cluster node. This field is optional.
-        /// When the list if not null or empty, the observer will forward the message to each observer which EntityId is in the list.</param>
+        /// <param name="observers">
+        ///     A list of observers in the same cluster node. This field is optional.
+        ///     When the list if not null or empty, the observer will forward the message to each observer which EntityId is in the
+        ///     list.
+        /// </param>
         /// <returns>The asynchronous result of the operation.</returns>
         public async Task NotifyObserverAsync(string topic, Message message, EntityId entityId, IEnumerable<EntityId> observers)
         {
@@ -467,16 +455,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 {
                     ServiceEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw new TimeoutException(Constants.RetryTimeoutExhausted);
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -497,9 +481,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                     {
                         StringBuilder builder = new StringBuilder($"Observer Proxy:\r\n[From]: {id}");
                         foreach (EntityId item in observerList)
-                        {
                             builder.Append($"\r\n[To]: {item}");
-                        }
                         ServiceEventSource.Current.Message(builder.ToString());
                         List<Task> taskList = new List<Task>();
                         taskList.AddRange(
@@ -517,9 +499,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
             catch (AggregateException ex)
             {
                 foreach (Exception e in ex.InnerExceptions)
-                {
                     ServiceEventSource.Current.Error(e);
-                }
                 throw;
             }
             catch (Exception ex)
@@ -528,26 +508,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 throw;
             }
             if (this.NotificationMessageReceived == null)
-            {
                 return;
-            }
             try
             {
                 Delegate[] invocationList = this.NotificationMessageReceived.GetInvocationList();
                 Task[] handlerTasks = new Task[invocationList.Length];
                 NotificationEventArgs<Message> args = new NotificationEventArgs<Message>(topic, message, entityId);
                 for (int i = 0; i < invocationList.Length; i++)
-                {
                     handlerTasks[i] = ProcessingHelper.ExecuteEventHandlerAsync((Func<NotificationEventArgs<Message>, Task>) invocationList[i], args);
-                }
                 await Task.WhenAll(handlerTasks);
             }
             catch (AggregateException ex)
             {
                 foreach (Exception e in ex.InnerExceptions)
-                {
                     ServiceEventSource.Current.Error(e);
-                }
             }
             catch (Exception ex)
             {
@@ -556,24 +530,23 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         }
 
         /// <summary>
-        /// Unregisters an observable. This method is invoked by an observable.
+        ///     Unregisters an observable. This method is invoked by an observable.
         /// </summary>
         /// <param name="topic">The topic.</param>
         /// <param name="entityId">The entity id of the observable.</param>
-        /// <param name="observers">A list of observers in the same cluster node. This field is optional.
-        /// When the list if not null or empty, the observer will forward the message to each observer which EntityId is in the list.</param>
+        /// <param name="observers">
+        ///     A list of observers in the same cluster node. This field is optional.
+        ///     When the list if not null or empty, the observer will forward the message to each observer which EntityId is in the
+        ///     list.
+        /// </param>
         /// <returns>The asynchronous result of the operation.</returns>
         public async Task UnregisterObservableAsync(string topic, EntityId entityId, IEnumerable<EntityId> observers)
         {
             EntityId id = null;
             if (string.IsNullOrWhiteSpace(topic))
-            {
                 throw new ArgumentException($"The {nameof(topic)} parameter cannot be null.", nameof(topic));
-            }
             if (entityId == null)
-            {
                 throw new ArgumentException($"The {nameof(entityId)} parameter cannot be null.", nameof(entityId));
-            }
             bool unregistered = false;
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
@@ -592,13 +565,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                             {
                                 observables.Remove(entityId.EntityUri);
                                 if (observables.Any())
-                                {
                                     await topicsDictionary.AddOrUpdateAsync(transaction, topic, e => observables, (e, s) => observables);
-                                }
                                 else
-                                {
                                     await topicsDictionary.TryRemoveAsync(transaction, topic);
-                                }
                                 unregistered = true;
                                 ServiceEventSource.Current.Message(
                                     $"Observable successfully unregistered.\r\n[Observable]: {entityId}\r\n[Observer]: {id}\r\n[Publication]: Topic=[{topic}]");
@@ -612,16 +581,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 {
                     ServiceEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw new TimeoutException(Constants.RetryTimeoutExhausted);
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception e in ex.InnerExceptions)
-                    {
                         ServiceEventSource.Current.Error(e);
-                    }
                     throw;
                 }
                 catch (Exception ex)
@@ -640,9 +605,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                     {
                         StringBuilder builder = new StringBuilder($"Observer Proxy:\r\n[From]: {id}");
                         foreach (EntityId item in observerList)
-                        {
                             builder.Append($"\r\n[To]: {item}");
-                        }
                         ServiceEventSource.Current.Message(builder.ToString());
                         List<Task> taskList = new List<Task>();
                         taskList.AddRange(observerList.Select(observer => ProcessingHelper.UnregisterObservableAsync(topic, observer, entityId, null)));
@@ -653,9 +616,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
             catch (AggregateException ex)
             {
                 foreach (Exception e in ex.InnerExceptions)
-                {
                     ActorEventSource.Current.Error(e);
-                }
                 throw;
             }
             catch (Exception ex)
@@ -663,27 +624,21 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 ActorEventSource.Current.Error(ex);
                 throw;
             }
-            if (!unregistered || this.ObservableUnregistered == null)
-            {
+            if (!unregistered || (this.ObservableUnregistered == null))
                 return;
-            }
             try
             {
                 Delegate[] invocationList = this.ObservableUnregistered.GetInvocationList();
                 Task[] handlerTasks = new Task[invocationList.Length];
                 SubscriptionEventArgs args = new SubscriptionEventArgs(topic, entityId);
                 for (int i = 0; i < invocationList.Length; i++)
-                {
                     handlerTasks[i] = ProcessingHelper.ExecuteEventHandlerAsync((Func<SubscriptionEventArgs, Task>) invocationList[i], args);
-                }
                 await Task.WhenAll(handlerTasks);
             }
             catch (AggregateException ex)
             {
                 foreach (Exception e in ex.InnerExceptions)
-                {
                     ActorEventSource.Current.Error(e);
-                }
             }
             catch (Exception ex)
             {

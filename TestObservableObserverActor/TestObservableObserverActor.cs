@@ -1,18 +1,37 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
 {
+    #region Using Directives
+
     using System;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using global::Microsoft.AzureCat.Samples.ObserverPattern.Entities;
-    using global::Microsoft.AzureCat.Samples.ObserverPattern.Framework;
-    using global::Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor.Interfaces;
-    using global::Microsoft.ServiceFabric.Actors.Runtime;
+    using Microsoft.AzureCat.Samples.ObserverPattern.Entities;
+    using Microsoft.AzureCat.Samples.ObserverPattern.Framework;
+    using Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor.Interfaces;
+    using Microsoft.ServiceFabric.Actors;
+    using Microsoft.ServiceFabric.Actors.Runtime;
+
+    #endregion
 
     [ActorService(Name = "TestObservableObserverActor")]
     internal class TestObservableObserverActor : ObservableObserverActorBase, ITestObservableObserverActor
@@ -20,9 +39,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
         #region Public Constructor
 
         /// <summary>
-        /// Initializes a new instance of the TestObservableObserverActor class.
+        ///     Initializes a new instance of the TestObservableObserverActor class.
         /// </summary>
-        public TestObservableObserverActor()
+        public TestObservableObserverActor(ActorService actorService, ActorId actorId) : base(actorService, actorId)
         {
             // Create Handlers for Observer Events
             this.NotificationMessageReceived += this.TestObservableObserverActor_NotificationMessageReceived;
@@ -62,12 +81,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
             try
             {
                 EntityId entityId = await this.GetEntityIdAsync();
-                StringBuilder stringBuilder = new StringBuilder($"Observer successfully registered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
+                StringBuilder stringBuilder =
+                    new StringBuilder(
+                        $"Observer successfully registered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
                 int i = 1;
                 foreach (string expression in args.FilterExpressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
-                {
                     stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
-                }
                 ActorEventSource.Current.Message(stringBuilder.ToString());
             }
             catch (Exception ex)
@@ -82,7 +101,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
             try
             {
                 EntityId entityId = await this.GetEntityIdAsync();
-                ActorEventSource.Current.Message($"Observer successfully unregistered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
+                ActorEventSource.Current.Message(
+                    $"Observer successfully unregistered.\r\n[Observable]: {entityId}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
             }
             catch (Exception ex)
             {
@@ -100,7 +120,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
             try
             {
                 EntityId entityId = await this.GetEntityIdAsync();
-                ActorEventSource.Current.Message($"Message Received.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {entityId}\r\n[Message]: Topic=[{args.Topic}] Body=[{args.Message?.Body ?? "NULL"}]");
+                ActorEventSource.Current.Message(
+                    $"Message Received.\r\n[Observable]: {args.EntityId}\r\n[Observer]: {entityId}\r\n[Message]: Topic=[{args.Topic}] Body=[{args.Message?.Body ?? "NULL"}]");
             }
             catch (Exception ex)
             {

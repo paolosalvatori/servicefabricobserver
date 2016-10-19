@@ -1,15 +1,33 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
 {
+    #region Using Directives
+
     using System;
     using System.Fabric;
     using System.Runtime.Serialization;
     using Microsoft.ServiceFabric.Actors;
     using Newtonsoft.Json;
+
+    #endregion
 
     [DataContract]
     public class EntityId
@@ -22,7 +40,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
                 ? $"Id=[{this.ActorId}] ServiceUri=[{this.ServiceUri}] Nodename=[{this.NodeName}] Kind=[{this.Kind}]"
                 : this.PartitionKey.HasValue
                     ? $"Id=[{this.PartitionKey}] ServiceUri=[{this.ServiceUri}] NodeName=[{this.NodeName}] Kind=[{this.Kind}]"
-                    : $"ServiceUri=[{this.ServiceUri}] Nodename=[{this.NodeName?? "UNKNOWN"}] Kind=[{this.Kind}]";
+                    : $"ServiceUri=[{this.ServiceUri}] Nodename=[{this.NodeName ?? "UNKNOWN"}] Kind=[{this.Kind}]";
         }
 
         #endregion
@@ -30,14 +48,14 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
         #region Public Constructors
 
         /// <summary>
-        /// Initializes a new instance of the EntityId class.
+        ///     Initializes a new instance of the EntityId class.
         /// </summary>
         public EntityId()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the EntityId class.
+        ///     Initializes a new instance of the EntityId class.
         /// </summary>
         /// <param name="actorId">The entity ActorId.</param>
         /// <param name="serviceUri">The service URI.</param>
@@ -57,7 +75,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the EntityId class.
+        ///     Initializes a new instance of the EntityId class.
         /// </summary>
         /// <param name="actorId">The entity ActorId.</param>
         /// <param name="serviceUri">The service URI.</param>
@@ -77,7 +95,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the EntityId class.
+        ///     Initializes a new instance of the EntityId class.
         /// </summary>
         /// <param name="serviceUri">The service URI.</param>
         public EntityId(Uri serviceUri)
@@ -95,7 +113,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the EntityId class.
+        ///     Initializes a new instance of the EntityId class.
         /// </summary>
         /// <param name="partitionKey">The entity PartitionKey.</param>
         /// <param name="serviceUri">The service URI.</param>
@@ -115,15 +133,13 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the EntityId class.
+        ///     Initializes a new instance of the EntityId class.
         /// </summary>
         /// <param name="shortEntityId">ShortEntityId parameter.</param>
         public EntityId(ShortEntityId shortEntityId)
         {
             if (!string.IsNullOrWhiteSpace(shortEntityId?.ActorId))
-            {
                 this.ActorId = new ActorId(shortEntityId.ActorId);
-            }
             this.PartitionKey = shortEntityId.PartitionKey;
             this.ServiceUri = shortEntityId.ServiceUri;
             this.Kind = shortEntityId.Kind;
@@ -136,40 +152,41 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Entities
                 this.NodeName = "UNKNOWN";
             }
         }
+
         #endregion
 
         #region Public Properties
 
         /// <summary>
-        /// Gets or sets the actor id. This field is empty in case of a service.
+        ///     Gets or sets the actor id. This field is empty in case of a service.
         /// </summary>
         [DataMember]
         [JsonProperty(PropertyName = "actorId", Order = 1)]
         public ActorId ActorId { get; set; }
 
         /// <summary>
-        /// Gets or sets the partition key. This field is empty in case of an actor.
+        ///     Gets or sets the partition key. This field is empty in case of an actor.
         /// </summary>
         [DataMember]
         [JsonProperty(PropertyName = "partitionKey", Order = 2)]
         public long? PartitionKey { get; set; }
 
         /// <summary>
-        /// Gets or sets the service URI;
+        ///     Gets or sets the service URI;
         /// </summary>
         [DataMember]
         [JsonProperty(PropertyName = "serviceUri", Order = 3)]
         public Uri ServiceUri { get; set; }
 
         /// <summary>
-        /// Gets the entity node name.
+        ///     Gets the entity node name.
         /// </summary>
         [DataMember]
         [JsonProperty(PropertyName = "nodeName", Order = 4)]
         public string NodeName { get; private set; }
 
         /// <summary>
-        /// Gets the entity type.
+        ///     Gets the entity type.
         /// </summary>
         [DataMember]
         [JsonProperty(PropertyName = "kind", Order = 5)]

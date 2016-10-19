@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Fabric;
@@ -15,6 +31,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
     using Microsoft.ServiceFabric.Actors.Client;
     using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
+
+    #endregion
 
     public static class ProcessingHelper
     {
@@ -34,7 +52,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                     else
                     {
                         IServerObserverService serviceProxy = observerEntityId.PartitionKey.HasValue
-                            ? ServiceProxy.Create<IServerObserverService>(observerEntityId.ServiceUri, new ServicePartitionKey(observerEntityId.PartitionKey.Value))
+                            ? ServiceProxy.Create<IServerObserverService>(
+                                observerEntityId.ServiceUri,
+                                new ServicePartitionKey(observerEntityId.PartitionKey.Value))
                             : ServiceProxy.Create<IServerObserverService>(observerEntityId.ServiceUri);
                         await serviceProxy.UnregisterObservableAsync(topic, observableEntityId, observerList);
                     }
@@ -44,28 +64,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception innerException in ex.InnerExceptions)
-                    {
                         ActorEventSource.Current.Error(innerException);
-                    }
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (Exception ex)
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
             }
@@ -86,7 +98,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                     else
                     {
                         IServerObserverService serviceProxy = observerEntityId.PartitionKey.HasValue
-                            ? ServiceProxy.Create<IServerObserverService>(observerEntityId.ServiceUri, new ServicePartitionKey(observerEntityId.PartitionKey.Value))
+                            ? ServiceProxy.Create<IServerObserverService>(
+                                observerEntityId.ServiceUri,
+                                new ServicePartitionKey(observerEntityId.PartitionKey.Value))
                             : ServiceProxy.Create<IServerObserverService>(observerEntityId.ServiceUri);
                         await serviceProxy.NotifyObserverAsync(topic, message, observableEntityId, observerList);
                     }
@@ -99,9 +113,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 catch (AggregateException ex)
                 {
                     foreach (Exception innerException in ex.InnerExceptions)
-                    {
                         ActorEventSource.Current.Error(innerException);
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -110,7 +122,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
             }
             WriteMessageToMessageBoxAsync(observerEntityId.EntityUri, message).Wait();
-            if (observerList != null && observerList.Any())
+            if ((observerList != null) && observerList.Any())
             {
                 Tuple<EntityId, List<EntityId>> tuple = GetObserverProxyAndList(observerList, true);
                 await NotifyObserverAsync(topic, message, tuple.Item1, observableEntityId, tuple.Item2);
@@ -120,16 +132,15 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public static async Task WriteMessageToMessageBoxAsync(Uri uri, Message message)
         {
             if (uri == null)
-            {
                 throw new ArgumentException($"The {nameof(uri)} parameter cannot be null.", nameof(uri));
-            }
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
                 try
                 {
                     IMessageBoxService messageBoxService =
-                        ServiceProxy.Create<IMessageBoxService>(ConfigurationHelper.MessageBoxServiceUri, 
-                                                                new ServicePartitionKey(PartitionResolver.Resolve(uri.AbsoluteUri, ConfigurationHelper.MessageBoxServicePartitionCount)));
+                        ServiceProxy.Create<IMessageBoxService>(
+                            ConfigurationHelper.MessageBoxServiceUri,
+                            new ServicePartitionKey(PartitionResolver.Resolve(uri.AbsoluteUri, ConfigurationHelper.MessageBoxServicePartitionCount)));
                     await messageBoxService.WriteMessagesAsync(uri, new[] {message});
                     return;
                 }
@@ -137,28 +148,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception innerException in ex.InnerExceptions)
-                    {
                         ActorEventSource.Current.Error(innerException);
-                    }
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (Exception ex)
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
             }
@@ -167,16 +170,15 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public static async Task<IEnumerable<Message>> ReadMessagesFromMessageBoxAsync(Uri uri)
         {
             if (uri == null)
-            {
                 throw new ArgumentException($"The {nameof(uri)} parameter cannot be null.", nameof(uri));
-            }
             for (int k = 1; k <= ConfigurationHelper.MaxQueryRetryCount; k++)
             {
                 try
                 {
                     IMessageBoxService messageBoxService =
-                        ServiceProxy.Create<IMessageBoxService>(ConfigurationHelper.MessageBoxServiceUri,
-                                                                new ServicePartitionKey(PartitionResolver.Resolve(uri.AbsoluteUri, ConfigurationHelper.MessageBoxServicePartitionCount)));
+                        ServiceProxy.Create<IMessageBoxService>(
+                            ConfigurationHelper.MessageBoxServiceUri,
+                            new ServicePartitionKey(PartitionResolver.Resolve(uri.AbsoluteUri, ConfigurationHelper.MessageBoxServicePartitionCount)));
                     return await messageBoxService.ReadMessagesAsync(uri);
                 }
                 catch (FabricTransientException ex)
@@ -186,9 +188,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 catch (AggregateException ex)
                 {
                     foreach (Exception innerException in ex.InnerExceptions)
-                    {
                         ActorEventSource.Current.Error(innerException);
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -212,28 +212,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception innerException in ex.InnerExceptions)
-                    {
                         ActorEventSource.Current.Error(innerException);
-                    }
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (Exception ex)
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
             }
@@ -252,28 +244,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (AggregateException ex)
                 {
                     foreach (Exception innerException in ex.InnerExceptions)
-                    {
                         ActorEventSource.Current.Error(innerException);
-                    }
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 catch (Exception ex)
                 {
                     ActorEventSource.Current.Error(ex);
                     if (k == ConfigurationHelper.MaxQueryRetryCount)
-                    {
                         throw;
-                    }
                 }
                 await Task.Delay(ConfigurationHelper.BackoffQueryDelay);
             }
@@ -282,10 +266,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public static Tuple<EntityId, List<EntityId>> GetObserverProxyAndList(List<EntityId> list, bool selectRandomObserverAsProxy)
 
         {
-            if (list == null || !list.Any())
-            {
+            if ((list == null) || !list.Any())
                 return null;
-            }
             if (selectRandomObserverAsProxy)
             {
                 // Create random object
@@ -316,10 +298,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.Framework
         public static Tuple<EntityId, List<EntityId>> GetObserverProxyAndList(IGrouping<string, EntityId> grouping, bool selectRandomObserverAsProxy)
 
         {
-            if (grouping == null || !grouping.Any())
-            {
+            if ((grouping == null) || !grouping.Any())
                 return null;
-            }
             if (selectRandomObserverAsProxy)
             {
                 // Create random object

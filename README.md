@@ -9,16 +9,16 @@ This project contains a framework that provides an implementation of the Observe
 # Introduction #
 The Service Fabric Observer Framework provides the base classes and services to implement the Observer design pattern in a Service Fabric application.
 
-<center>![Architecture](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Architecture.png)</center>
+<center>![Architecture](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/Architecture.png)</center>
 
-The design pattern shown in the above diagram represents a hybrid between Observable-Observer and Observer design patterns: in fact, in this framework observables and observers communicate with each other directly as in the Observer pattern, but observers typically discover topic-specific observables via a stateful registry service. In addition, they can specify filter expressions to receive only a subset of messages sent by observables. The registry service exposes the **IRegistryService** interface that can used by observable services and actors to register and unregister as an observable for a given topic. Observers can invoke the **QueryObservables** method to discover observables for a given topic. The observer can register with one or multiple observables by invoking the **RegisterObserver** method on the **IObservable** interface exposed by an observable. Likewise, when a service partition or actor is removed from the system, or whenever it decides to no longer receive messages from a given observable, it can invoke the **UnregisterObserver** on the **IObservable** interface exposed by the observable service partition or actor. Each observer maintains a list of the observable to which is registered. Likewise, an observable maintains a list of its observers, and it sends a copy of the message to each of them by invoking the **Notify** method on their **ISubscribe** interface. The observable can directly send the message to each of the observers, or can divide observers by cluster node, and use one the observers for each node as a proxy. In this case, along with the message, the observer will receive a list of observers located on the same node to which forward the message. When the observable is unable to send a message to the proxy observer, it will write the message to the messagebox of the observer by invoking the **WriteMessages** method exposed by the **MessageBoxService** and will promote another observer from the same list as proxy for the node. More in general, the framework retries every operation a configurable amount of time and uses a configurable backoff delay  between retries. In particular, when an observable sends messages to its observers, the observable tries to send the message to each observer directly or via a proxy and in case the maximum number of retries expires, he message is saved to the messagebox of the observer, so that, when it comes back online, it can retrieve along with the other messages by invoking the ReadMessages method exposed by the **MessageBoxService**. Before shutting down, an observable invokes the **UnregisterObservable** method on the **ISubscribe** interface of its observers to notify them that it is leaving. Likewise, the observable invokes the **UnregisterObservable** on the **IRegistry** interface exposed by the registry service, to notify it that it’s leaving. The registry service proceed to remove the observable from the list of observables for a certain topic. The registry service uses a **ReliableDictionary** to store observables: the item key is the topic, while the value is a list of observables for that topic. Observables are required to periodically send a heartbeat message to the registry service. 
+The design pattern shown in the above diagram represents a hybrid between Observable-Observer and Observer design patterns: in fact, in this framework observables and observers communicate with each other directly as in the Observer pattern, but observers typically discover topic-specific observables via a stateful registry service. In addition, they can specify filter expressions to receive only a subset of messages sent by observables. The registry service exposes the **IRegistryService** interface that can used by observable services and actors to register and unregister as an observable for a given topic. Observers can invoke the **QueryObservables** method to discover observables for a given topic. The observer can register with one or multiple observables by invoking the **RegisterObserver** method on the **IObservable** interface exposed by an observable. Likewise, when a service partition or actor is removed from the system, or whenever it decides to no longer receive messages from a given observable, it can invoke the **UnregisterObserver** on the **IObservable** interface exposed by the observable service partition or actor. Each observer maintains a list of the observable to which is registered. Likewise, an observable maintains a list of its observers, and it sends a copy of the message to each of them by invoking the **Notify** method on their **ISubscribe** interface. The observable can directly send the message to each of the observers, or can divide observers by cluster node, and use one the observers for each node as a proxy. In this case, along with the message, the observer will receive a list of observers located on the same node to which forward the message. When the observable is unable to send a message to the proxy observer, it will write the message to the messagebox of the observer by invoking the **WriteMessages** method exposed by the **MessageBoxService** and will promote another observer from the same list as proxy for the node. More in general, the framework retries every operation a configurable amount of time and uses a configurable backoff delay  between retries. In particular, when an observable sends messages to its observers, the observable tries to send the message to each observer directly or via a proxy and in case the maximum number of retries expires, he message is saved to the messagebox of the observer, so that, when it comes back online, it can retrieve along with the other messages by invoking the ReadMessages method exposed by the **MessageBoxService**. Before shutting down, an observable invokes the **UnregisterObservable** method on the **ISubscribe** interface of its observers to notify them that it is leaving. Likewise, the observable invokes the **UnregisterObservable** on the **IRegistry** interface exposed by the registry service, to notify it that it’s leaving. The registry service proceed to remove the observable from the list of observables for a certain topic. The registry service uses a **ReliableDictionary** to store observables: the item key is the topic, while the value is a list of observables for that topic. Observables are required to periodically send a heartbeat message to the registry service.
 
 ## Demo ##
 The following diagram shows the architecture design of the demo:
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Demo.png)</center>
+<center>![Demo](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/Demo.png)</center>
 
-As you can see, you can use a client application to invoke three different tests, directly via ActorProxy/ServiceProxy when testing the application on the local cluster, or via gateway service that is implemented as a stateless reliable service. The gateway service exposes a REST interface implemented by six ASP.NET Web API REST services (**ApiController**). These services, allows to interact with: 
+As you can see, you can use a client application to invoke three different tests, directly via ActorProxy/ServiceProxy when testing the application on the local cluster, or via gateway service that is implemented as a stateless reliable service. The gateway service exposes a REST interface implemented by six ASP.NET Web API REST services (**ApiController**). These services, allows to interact with:
 
 
 - Observable Services and Actors
@@ -31,9 +31,9 @@ The test application contains two samples:
  - Stock Market
 Both samples can be run on the local Service Fabric cluster or a remote Service Fabric cluster on Azure using the client the companion test console application.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Client.png)</center>
+<center>![Demo](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/Client.png)</center>
 
-The client application can invoke the underlying reliable and actor test services directly using a [ServiceProxy](https://msdn.microsoft.com/en-us/library/microsoft.servicefabric.services.remoting.client.serviceproxy.aspx "ServiceProxy") or [ActorProxy](https://msdn.microsoft.com/en-us/library/microsoft.servicefabric.actors.client.actorproxy.aspx "ActorProxy") instance or via the **GatewayService** using an [HttpClient](https://msdn.microsoft.com/en-us/library/system.net.http.httpclient(v=vs.118).aspx) object. When client running the client application against a remote cluster, you can only invoke the reliable and actor services via the **GatewayService**. 
+The client application can invoke the underlying reliable and actor test services directly using a [ServiceProxy](https://msdn.microsoft.com/en-us/library/microsoft.servicefabric.services.remoting.client.serviceproxy.aspx "ServiceProxy") or [ActorProxy](https://msdn.microsoft.com/en-us/library/microsoft.servicefabric.actors.client.actorproxy.aspx "ActorProxy") instance or via the **GatewayService** using an [HttpClient](https://msdn.microsoft.com/en-us/library/system.net.http.httpclient(v=vs.118).aspx) object. When client running the client application against a remote cluster, you can only invoke the reliable and actor services via the **GatewayService**.
 In addition, the client application allows to enumerate or delete all the instance of the **TestObservableObserverActor** actor type. For more information on the client application, see the code of the **Program.cs** file under the **ObservableObserverApplication.TestClient** project.
 
 # IoT Sample #
@@ -46,18 +46,18 @@ The client application creates a set of observers which subscribe with the two o
 
 - "id != null and value != null and id = 10"
 
-Filter expressions can only be used by observable entities when sending messages in JSON format to their observers on given topic. 
+Filter expressions can only be used by observable entities when sending messages in JSON format to their observers on given topic.
 The **TestObservableObserverService** class inherits from the **ObservableObserverServiceBase** abstract class. Hence, its partitions are both observable and observer entities. Likewise, the **TestObservableObserverActor** class inherits from the **ObservableObserverActorBase** abstract class. This means that the actors of this type are  both observable and observer entities. This means that they can act as an observable and send messages to a set of observer but at the same time they can receive messages from one or multiple observable entities on different topics.
 
-The following picture depicts the message flow implemented by the sample. 
+The following picture depicts the message flow implemented by the sample.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/IoTSample01.png)</center>
+<center>![Demo](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/IoTSample01.png)</center>
 
 As you can see, the **Milan Site** observable actor sends a JSON message to multiple observers. In particular, when the value of the **useObserverAsProxy** boolean parameter is equal to **true**, the **NotifyObserversAsync** method splits the observers by cluster node name and instead of invoking each observer, it sends the message to an observer per cluster node, and includes in the call the list of the remaining observer entities located on the same node. The observers directly invoked by the observable will act as a proxy and will invoke the remaining observers located on the same node. When the value of the **useObserverAsProxy** boolean parameter is equal to **false**, the observable invoked each of the observer directly, regardless if they are located on the same or a different cluster node.   
 
-The following picture depicts the second message flow implemented by the sample. 
+The following picture depicts the second message flow implemented by the sample.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/IoTSample02.png)</center>
+<center>![Demo](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/IoTSample02.png)</center>
 
 In this case, a partition of the **TestObservableObserverService** service sends a JSON message to multiple observer actors. Each message has the following format:
 
@@ -66,7 +66,7 @@ In this case, a partition of the **TestObservableObserverService** service sends
 # Stock Market #
 In the second sample, there is an observable actor with **ActorId** equal to **Stock Market** that sends JSON messages to notify to three observers, each interested to a different stock ticker. Each message contains a stock price change and has the following format.
 
- - {'stock': '<stock-ticker>', 'value': <numeric-value>} 
+ - {'stock': '<stock-ticker>', 'value': <numeric-value>}
 
 The three observers that register with the **Stock Market** observable actor on the **Stocks** topic are the following:
 
@@ -74,9 +74,9 @@ The three observers that register with the **Stock Market** observable actor on 
  - An actor with **ActorId** equal to **BBBB*** which uses the filter **stock = 'BBBB'** to receive only stock price changes of the **BBBB** stock.
  -  - An actor with **ActorId** equal to **CCCC*** which uses the filter **stock = 'CCCC'** to receive only stock price changes of the **CCCC** stock.
 
-The following picture depicts the second message flow implemented by the sample. 
+The following picture depicts the second message flow implemented by the sample.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/StockMarket.png)</center>
+<center>![Demo](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/StockMarket.png)</center>
 
 # TestObservableObserverService #
 The following table shows the code of the **TestObservableObserverService** class. As you can see, in order to create a stateful reliable service that acts as both an observable and observer, you need to inherit the service class from the **ObservableObserverServiceBase** abstract class contained in the **Framework** project. If you want to define a service that acts only as an observable, the related class needs to inherit from the **ObservableServiceBase** abstract class. Likewise, if you want to create a service that acts only as an observer, the class needs to inherit from the **ObserverServiceBase** abstract class. In order to handle the events exposed by the base class, you need to define event handlers in the class constructor as shown in the code below.
@@ -345,7 +345,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
 # Monitoring the Test Application on the Local Cluster #
 The observable and observer classes use custom **SourceEvent** classes to generate ETW events. You can use Visual Studio to see streaming events while running the application on the local cluster, as shown in the following picture.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Diagnostics.png)</center>
+<center>![Demo](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/Diagnostics.png)</center>
 
 # Appendix #
 This section contains a description of the Observer design pattern.
@@ -354,7 +354,7 @@ This section contains a description of the Observer design pattern.
 The observer pattern is a [Gang of Four design pattern](http://www.blackwasp.co.uk/GofPatterns.aspx). The Gang of Four are the authors of the book, "[Design Patterns: Elements of Reusable Object-Oriented Software](http://en.wikipedia.org/wiki/Design_Patterns_(book))". This important book describes various development techniques and pitfalls in addition to providing twenty-three object-oriented programming design patterns. The four authors were Erich Gamma, Richard Helm, Ralph Johnson and John Vlissides. The Observer is a behavioral pattern as it defines a manner for controlling communication between classes or entities. The observer pattern is used to allow a single object, known as the subject, to publish changes to its state. Many other observer objects that depend upon the subject can subscribe to it so that they are immediately and automatically notified of any changes to the subject's state.
 The pattern gives loose coupling between the subject and its observers. The subject holds a collection of observers that are set only at run-time. Each observer may be of any class that inherits from a known base class or implements a common interface. The actual functionality of the observers and their use of the state data need not be known by the subject.
 
-<center>![UML Diagram of the Observer Design Pattern](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/UMLChartOfObserverDesignPattern.png)</center> 
+<center>![UML Diagram of the Observer Design Pattern](https://raw.githubusercontent.com/azure-cat-emea/servicefabricobserver/master/Images/UMLChartOfObserverDesignPattern.png)</center>
 
 <center>**UML Diagram of the Observer Design Pattern**</center>
 
@@ -383,7 +383,7 @@ The .NET Framework provides support for a full-fledged implementation of the Obs
 At any given time, a given provider may have zero, one, or multiple observers. The provider is responsible for storing references to observers and ensuring that they are valid before it sends notifications. The [IObservable<T>](https://msdn.microsoft.com/en-us/library/dd990377(v=vs.110).aspx) interface does not make any assumptions about the number of observers or the order in which notifications are sent.
 The provider sends the following three kinds of notifications to the observer by calling [IObserver<T>](https://msdn.microsoft.com/en-us/library/dd783449(v=vs.110).aspx) methods:
 <ul>
-<li> 
+<li>
 The current data. The provider can call the [IObserver<T>](https://msdn.microsoft.com/en-us/library/dd783449(v=vs.110).aspx).[OnNext](https://msdn.microsoft.com/en-us/library/dd782792(v=vs.110).aspx) method to pass the observer a T object that has current data, changed data, or fresh data.
 </li>
 <li>
@@ -393,9 +393,8 @@ An error condition. The provider can call the [IObserver<T>](https://msdn.micros
 No further data. The provider can call the [IObserver<T>](https://msdn.microsoft.com/en-us/library/dd783449(v=vs.110).aspx).[OnCompleted](https://msdn.microsoft.com/en-us/library/dd782982(v=vs.110).aspx) method to notify the observer that it has finished sending notifications.
 </li>
 </lu>
-For more information, see [IObservable<T>](https://msdn.microsoft.com/en-us/library/dd990377(v=vs.110).aspx) Interface and [IObserver<T>](https://msdn.microsoft.com/en-us/library/dd783449(v=vs.110).aspx) Interface. 
-The .NET Framework provides an easy and flexible way to implement the Observer pattern using Reactive Extensions. [Reactive Extensions (Rx)](https://msdn.microsoft.com/en-us/data/gg577609.aspx) is a library for composing asynchronous and event-based programs using observable sequences and LINQ-style query operators. Data sequences can take many forms, such as a stream of data from a file or web service, web services requests, system notifications, or a series of events such as user input. Reactive Extensions represents all these data sequences as observable sequences. An application can subscribe to these observable sequences to receive asynchronous notifications as new data arrive. 
+For more information, see [IObservable<T>](https://msdn.microsoft.com/en-us/library/dd990377(v=vs.110).aspx) Interface and [IObserver<T>](https://msdn.microsoft.com/en-us/library/dd783449(v=vs.110).aspx) Interface.
+The .NET Framework provides an easy and flexible way to implement the Observer pattern using Reactive Extensions. [Reactive Extensions (Rx)](https://msdn.microsoft.com/en-us/data/gg577609.aspx) is a library for composing asynchronous and event-based programs using observable sequences and LINQ-style query operators. Data sequences can take many forms, such as a stream of data from a file or web service, web services requests, system notifications, or a series of events such as user input. Reactive Extensions represents all these data sequences as observable sequences. An application can subscribe to these observable sequences to receive asynchronous notifications as new data arrive.
 When using the Reactive Extensions, you do not need to implement the [IObservable<T>](https://msdn.microsoft.com/en-us/library/dd990377(v=vs.110).aspx) interface manually to create an observable sequences. Similarly, you do not need to implement [IObserver<T>](https://msdn.microsoft.com/en-us/library/dd783449(v=vs.110).aspx) either to subscribe to a sequence. By installing the Reactive Extension assemblies, you can take advantage of the Observable type which provides many static LINQ operators for you to create a simple sequence with zero, one or more elements. In addition, Rx provides Subscribe extension methods that take various combinations of OnNext, OnError and OnCompleted handlers in terms of delegates.
-The following sample uses the Range operator of the Observable type to create a simple observable collection of numbers. The observer subscribes to this collection using the Subscribe method of the Observable class, and provides actions that are delegates which handle OnNext, OnError and OnCompleted. 
+The following sample uses the Range operator of the Observable type to create a simple observable collection of numbers. The observer subscribes to this collection using the Subscribe method of the Observable class, and provides actions that are delegates which handle OnNext, OnError and OnCompleted.
 The Range operator has several overloads. In our example, it creates a sequence of integers that starts with x and produces y sequential numbers afterwards.
-

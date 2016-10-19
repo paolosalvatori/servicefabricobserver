@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverService
 {
+    #region Using Directives
+
     using System;
     using System.Fabric;
     using System.Linq;
@@ -13,15 +29,17 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverServi
     using Microsoft.AzureCat.Samples.ObserverPattern.Entities;
     using Microsoft.AzureCat.Samples.ObserverPattern.Framework;
 
+    #endregion
+
     /// <summary>
-    /// The FabricRuntime creates an instance of this class for each service type instance.
+    ///     The FabricRuntime creates an instance of this class for each service type instance.
     /// </summary>
     internal sealed class TestObservableObserverService : ObservableObserverServiceBase
     {
         #region Public Constructor
 
         /// <summary>
-        /// Initializes a new instance of the TestObservableObserverService class.
+        ///     Initializes a new instance of the TestObservableObserverService class.
         /// </summary>
         public TestObservableObserverService(StatefulServiceContext context)
             : base(context)
@@ -58,9 +76,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverServi
                         $"Observer successfully registered.\r\n[Observable]: {id}\r\n[Observer]: {args.EntityId}\r\n[Subscription]: Topic=[{args.Topic}]");
                 int i = 1;
                 foreach (string expression in args.FilterExpressions.Where(expression => !string.IsNullOrWhiteSpace(expression)))
-                {
                     stringBuilder.Append($" FilterExpression[{i++}]=[{expression}]");
-                }
                 ServiceEventSource.Current.Message(stringBuilder.ToString());
             }
             catch (Exception ex)

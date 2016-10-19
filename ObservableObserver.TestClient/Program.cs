@@ -1,10 +1,26 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Configuration;
@@ -28,69 +44,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
     using Microsoft.ServiceFabric.Services.Remoting.Client;
     using Newtonsoft.Json;
 
+    #endregion
+
     public class Program
     {
-        #region Private Static Fields
-        private static FabricClient FabricClient = new FabricClient();
-        private static List<Test> TestList = new List<Test>
-                {
-                    new Test
-                    {
-                        Name = "IoT Test Via Proxy",
-                        Description = "Simulates an IoT scenario with multiple observables and observers.",
-                        Action = IoTTestViaProxy
-                    },
-                    new Test
-                    {
-                        Name = "IoT Test Via Gateway",
-                        Description = "Simulates an IoT scenario with multiple observables and observers.",
-                        Action = IoTTestViaGateway
-                    },
-                    new Test
-                    {
-                        Name = "Stock Market Test Via Proxy",
-                        Description = "Simulates a stock trading scenario.",
-                        Action = StockMarketTestViaProxy
-                    },
-                    new Test
-                    {
-                        Name = "Stock Market Test Via Gateway",
-                        Description = "Simulates a stock trading scenario.",
-                        Action = StockMarketTestViaGateway
-                    },
-                    new Test
-                    {
-                        Name = "MessageBox Test Via Proxy",
-                        Description = "Simulates an observer reading messages from its messagebox.",
-                        Action = MessageBoxTestViaProxy
-                    },
-                    new Test
-                    {
-                        Name = "MessageBox Test Via Gateway",
-                        Description = "Simulates an observer reading messages from its messagebox.",
-                        Action = MessageBoxTestViaGateway
-                    },
-                    new Test
-                    {
-                        Name = "Enumerate Actors Via Proxy",
-                        Description = "Enumerates TestObservableObserverActor actors.",
-                        Action = EnumerateActorsViaActorProxy
-                    },
-                    new Test
-                    {
-                        Name = "Delete Actors Via Proxy",
-                        Description = "Deletes TestObservableObserverActor actors.",
-                        Action = DeleteActorsViaActorProxy
-                    }
-                };
-        
-        private static string Line = new string('-', 139);
-        private static string GatewayUrl;
-        private static Uri TestObservableObserverActorUri;
-        private static Uri TestObservableObserverServiceUri;
-        #endregion
-
         #region Main Method
+
         public static void Main(string[] args)
         {
             try
@@ -108,7 +67,6 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 
                 int i;
                 while ((i = SelectOption()) != TestList.Count + 1)
-                {
                     try
                     {
                         TestList[i - 1].Action();
@@ -117,13 +75,76 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                     {
                         PrintException(ex);
                     }
-                }
             }
             catch (Exception ex)
             {
                 PrintException(ex);
             }
         }
+
+        #endregion
+
+        #region Private Static Fields
+
+        private static readonly FabricClient FabricClient = new FabricClient();
+
+        private static readonly List<Test> TestList = new List<Test>
+        {
+            new Test
+            {
+                Name = "IoT Test Via Proxy",
+                Description = "Simulates an IoT scenario with multiple observables and observers.",
+                Action = IoTTestViaProxy
+            },
+            new Test
+            {
+                Name = "IoT Test Via Gateway",
+                Description = "Simulates an IoT scenario with multiple observables and observers.",
+                Action = IoTTestViaGateway
+            },
+            new Test
+            {
+                Name = "Stock Market Test Via Proxy",
+                Description = "Simulates a stock trading scenario.",
+                Action = StockMarketTestViaProxy
+            },
+            new Test
+            {
+                Name = "Stock Market Test Via Gateway",
+                Description = "Simulates a stock trading scenario.",
+                Action = StockMarketTestViaGateway
+            },
+            new Test
+            {
+                Name = "MessageBox Test Via Proxy",
+                Description = "Simulates an observer reading messages from its messagebox.",
+                Action = MessageBoxTestViaProxy
+            },
+            new Test
+            {
+                Name = "MessageBox Test Via Gateway",
+                Description = "Simulates an observer reading messages from its messagebox.",
+                Action = MessageBoxTestViaGateway
+            },
+            new Test
+            {
+                Name = "Enumerate Actors Via Proxy",
+                Description = "Enumerates TestObservableObserverActor actors.",
+                Action = EnumerateActorsViaActorProxy
+            },
+            new Test
+            {
+                Name = "Delete Actors Via Proxy",
+                Description = "Deletes TestObservableObserverActor actors.",
+                Action = DeleteActorsViaActorProxy
+            }
+        };
+
+        private static readonly string Line = new string('-', 139);
+        private static string GatewayUrl;
+        private static Uri TestObservableObserverActorUri;
+        private static Uri TestObservableObserverServiceUri;
+
         #endregion
 
         #region Test Methods
@@ -143,7 +164,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 ObservableEntityId = observableObserverServiceEntityId,
                 UseObserverAsProxy = true
             };
-            
+
             // Clear all observers and publications for observable service partition
             SendRequestToGateway(gatewayRequest, "api/observable/service/clear");
             Console.WriteLine(" - All observers and publications cleared for the observable service partition.");
@@ -168,7 +189,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 ObservableEntityId = observableObserverActorEntityId,
                 UseObserverAsProxy = true
             };
-            
+
             // Clear all observers and publications for observable actor
             SendRequestToGateway(gatewayRequest, "api/observable/actor/clear");
             Console.WriteLine(" - All observers and publications cleared for the observable actor.");
@@ -184,7 +205,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Console.WriteLine("] topic.");
 
             // Retrieve observables by topic from the registry
-            string[] topicArray = { "Milan", "Rome" };
+            string[] topicArray = {"Milan", "Rome"};
             foreach (string t in topicArray)
             {
                 gatewayRequest = new GatewayRequest
@@ -194,9 +215,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/registry/service/get");
                 string json = response.Content.ReadAsStringAsync().Result;
                 if (string.IsNullOrWhiteSpace(json))
-                {
                     continue;
-                }
                 IEnumerable<ShortEntityId> observableList = JsonConvert.DeserializeObject<IEnumerable<ShortEntityId>>(json);
                 Console.Write(" - Observables for [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -229,13 +248,13 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 gatewayRequest = new GatewayRequest
                 {
                     Topic = topic,
-                    FilterExpressions = new List<string> { filterExpressionForId10 },
+                    FilterExpressions = new List<string> {filterExpressionForId10},
                     ObserverEntityId = new ShortEntityId(c.ToString(), TestObservableObserverActorUri),
                     ObservableEntityId = observableObserverActorEntityId
                 };
                 SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
             }
-            
+
             // Z is using a different filter expression.
             // So when the observable actor will send a JSON message,
             // Z won't receive the message as its filter expression is not satisfied by the JSON message
@@ -243,7 +262,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             gatewayRequest = new GatewayRequest
             {
                 Topic = topic,
-                FilterExpressions = new List<string> { filterExpressionForId20 },
+                FilterExpressions = new List<string> {filterExpressionForId20},
                 ObserverEntityId = new ShortEntityId("Z", TestObservableObserverActorUri),
                 ObservableEntityId = observableObserverActorEntityId
             };
@@ -266,7 +285,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 gatewayRequest = new GatewayRequest
                 {
                     Topic = topic,
-                    FilterExpressions = new List<string> { filterExpressionForId50 },
+                    FilterExpressions = new List<string> {filterExpressionForId50},
                     ObserverEntityId = new ShortEntityId(c.ToString(), TestObservableObserverActorUri),
                     ObservableEntityId = observableObserverServiceEntityId
                 };
@@ -280,7 +299,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             gatewayRequest = new GatewayRequest
             {
                 Topic = topic,
-                FilterExpressions = new List<string> { filterExpressionForId60 },
+                FilterExpressions = new List<string> {filterExpressionForId60},
                 ObserverEntityId = new ShortEntityId("Z", TestObservableObserverActorUri),
                 ObservableEntityId = observableObserverServiceEntityId
             };
@@ -303,8 +322,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 Topic = topic,
                 Messages = new[]
                 {
-                    new Message{Body = "{'id': 10, 'value': 52}"},
-                    new Message{Body = "{'id': 10, 'value': 64}"}
+                    new Message {Body = "{'id': 10, 'value': 52}"},
+                    new Message {Body = "{'id': 10, 'value': 64}"}
                 },
                 ObservableEntityId = observableObserverActorEntityId,
                 UseObserverAsProxy = true
@@ -332,8 +351,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 Topic = topic,
                 Messages = new[]
                 {
-                    new Message{Body = "{'id': 50, 'value': 42}"},
-                    new Message{Body = "{'id': 50, 'value': 48}"}
+                    new Message {Body = "{'id': 50, 'value': 42}"},
+                    new Message {Body = "{'id': 50, 'value': 48}"}
                 },
                 ObservableEntityId = observableObserverServiceEntityId,
                 UseObserverAsProxy = true
@@ -386,8 +405,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 Topic = topic,
                 Messages = new[]
                 {
-                    new Message{Body = "This is a NON-JSON message"},
-                    new Message{Body = "This is another NON-JSON message"}
+                    new Message {Body = "This is a NON-JSON message"},
+                    new Message {Body = "This is another NON-JSON message"}
                 },
                 ObservableEntityId = observableObserverActorEntityId,
                 UseObserverAsProxy = true
@@ -448,7 +467,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Console.WriteLine(Line);
 
             // Create observable service proxy
-            IClientObservableService observableObserverServiceIoT = ServiceProxy.Create<IClientObservableService>(TestObservableObserverServiceUri, new ServicePartitionKey(1));
+            IClientObservableService observableObserverServiceIoT = ServiceProxy.Create<IClientObservableService>(
+                TestObservableObserverServiceUri,
+                new ServicePartitionKey(1));
             Console.WriteLine(" - ServiceProxy for the observable service partition created.");
 
             // Clear all observers and publications.
@@ -465,7 +486,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Console.WriteLine("] topic.");
 
             // Create observable actor proxy
-            IClientObservableObserverActor observableObserverActorIoT = ActorProxy.Create<IClientObservableObserverActor>(new ActorId("MilanSite"), TestObservableObserverActorUri);
+            IClientObservableObserverActor observableObserverActorIoT = ActorProxy.Create<IClientObservableObserverActor>(
+                new ActorId("MilanSite"),
+                TestObservableObserverActorUri);
             Console.WriteLine(" - ActorProxy for the observable actor created.");
 
             // Clear all observers and publications.
@@ -484,11 +507,13 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // Retrieve observables by topic from the registry
             Uri registryServiceUri = new Uri($"{ApplicationUri}{RegistryServiceUri}");
             ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(registryServiceUri).Result;
-            int registryServicePartitionCount = servicePartitionList != null && servicePartitionList.Any() ? servicePartitionList.Count : 1;
-            string[] topicArray = { "Milan", "Rome" };
+            int registryServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
+            string[] topicArray = {"Milan", "Rome"};
             foreach (string t in topicArray)
             {
-                IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(registryServiceUri, new ServicePartitionKey(PartitionResolver.Resolve(t, registryServicePartitionCount)));
+                IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(
+                    registryServiceUri,
+                    new ServicePartitionKey(PartitionResolver.Resolve(t, registryServicePartitionCount)));
                 IEnumerable<EntityId> observableList = registryServiceProxy.QueryObservablesAsync(t, null).Result;
                 Console.Write(" - Observables for [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -536,20 +561,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // - topic = Rome and observable =  observableObserverServiceIoT
             topic = "Milan";
 
-            observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId10 }, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
 
             // When the observable for Milan topic will send a JSON message,
             // Z won't receive the message as its filter expression is not satisfied by the JSON message
-            observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId20 }, observableObserverActorIoTEntityId).Wait();
+            observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId20}, observableObserverActorIoTEntityId).Wait();
 
             Console.Write(" - Observer actors registered: Topic = [");
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -563,24 +588,25 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 
             topic = "Rome";
 
-            observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
 
             // The observableObserverActorIoT observable actor for Milan topic registers as an observer:
             // - topic = Rome and observable =  observableObserverServiceIoT
-            observableObserverActorIoT.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId50 }, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorIoT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                .Wait();
 
             // When the observable for Rome topic will send a JSON message,
             // Z won't receive the message as its filter expression is not satisfied by the JSON message
-            observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> { filterExpressionForId60 }, observableObserverServiceIoTEntityId).Wait();
+            observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId60}, observableObserverServiceIoTEntityId).Wait();
 
             Console.Write(" - Observer actors registered: Topic = [");
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -594,7 +620,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 
             // The observableObserverActorIoT observable actor sends a JSON message
             topic = "Milan";
-            Message message = new Message { Body = "{'id': 10, 'value': 52}" };
+            Message message = new Message {Body = "{'id': 10, 'value': 52}"};
             observableObserverActorIoT.NotifyObserversAsync("Milan", message, true).Wait();
 
             Console.Write(" - Observable actor has sent a message. Topic = [");
@@ -609,7 +635,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 
             // The observableObserverServiceIoT observable service sends a JSON message
             topic = "Rome";
-            message = new Message { Body = "{'id': 50, 'value': 52}" };
+            message = new Message {Body = "{'id': 50, 'value': 52}"};
             observableObserverServiceIoT.NotifyObserversAsync(topic, message, true).Wait();
 
             Console.Write(" - Observable service partition has sent a message. Topic = [");
@@ -641,7 +667,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // Note: the message is not in JSON format, hence the message is broadcasted to all observers as filter expressions
             //       are not evaluated.
             topic = "Milan";
-            message = new Message { Body = "Non-JSON message" };
+            message = new Message {Body = "Non-JSON message"};
             observableObserverActorIoT.NotifyObserversAsync(topic, message, true).Wait();
 
             Console.Write(" - Observable actor has sent a message. Topic = [");
@@ -683,7 +709,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // Write Line
             Console.WriteLine(Line);
 
-            IClientObservableObserverActor observableObserverActorStocks = ActorProxy.Create<IClientObservableObserverActor>(new ActorId("StockMarket"), TestObservableObserverActorUri);
+            IClientObservableObserverActor observableObserverActorStocks = ActorProxy.Create<IClientObservableObserverActor>(
+                new ActorId("StockMarket"),
+                TestObservableObserverActorUri);
             Console.WriteLine(" - ActorProxy for the observable actor created.");
 
             // Clear all observers and publications.
@@ -702,8 +730,10 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // Retrieve observables by topic from the registry
             Uri registryServiceUri = new Uri($"{ApplicationUri}{RegistryServiceUri}");
             ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(registryServiceUri).Result;
-            int registryServicePartitionCount = servicePartitionList != null && servicePartitionList.Any() ? servicePartitionList.Count : 1;
-            IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(registryServiceUri, new ServicePartitionKey(PartitionResolver.Resolve(topic, registryServicePartitionCount)));
+            int registryServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
+            IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(
+                registryServiceUri,
+                new ServicePartitionKey(PartitionResolver.Resolve(topic, registryServicePartitionCount)));
             IEnumerable<EntityId> observableList = registryServiceProxy.QueryObservablesAsync(topic, null).Result;
             Console.Write(" - Observables for [");
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -719,7 +749,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             }
 
             // Create observer service proxies
-            IClientObserverService observableObserverServiceMsft = ServiceProxy.Create<IClientObserverService>(TestObservableObserverServiceUri, new ServicePartitionKey(2));
+            IClientObserverService observableObserverServiceMsft = ServiceProxy.Create<IClientObserverService>(
+                TestObservableObserverServiceUri,
+                new ServicePartitionKey(2));
 
             // Create observer actor proxies
             IClientObserverActor observableObserverActorAmzn = ActorProxy.Create<IClientObserverActor>(new ActorId("BBBB"), TestObservableObserverActorUri);
@@ -734,9 +766,18 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             const string filterExpressionForAmznTicker = "stock = 'BBBB'";
             const string filterExpressionForOrclTicker = "stock = 'CCCC'";
 
-            observableObserverServiceMsft.RegisterObserverServiceAsync("Stocks", new List<string> { filterExpressionForMsftTicker }, observableObserverActorStocksEntityId).Wait();
-            observableObserverActorAmzn.RegisterObserverActorAsync("Stocks", new List<string> { filterExpressionForAmznTicker }, observableObserverActorStocksEntityId).Wait();
-            observableObserverActorOrcl.RegisterObserverActorAsync("Stocks", new List<string> { filterExpressionForOrclTicker }, observableObserverActorStocksEntityId).Wait();
+            observableObserverServiceMsft.RegisterObserverServiceAsync(
+                "Stocks",
+                new List<string> {filterExpressionForMsftTicker},
+                observableObserverActorStocksEntityId).Wait();
+            observableObserverActorAmzn.RegisterObserverActorAsync(
+                "Stocks",
+                new List<string> {filterExpressionForAmznTicker},
+                observableObserverActorStocksEntityId).Wait();
+            observableObserverActorOrcl.RegisterObserverActorAsync(
+                "Stocks",
+                new List<string> {filterExpressionForOrclTicker},
+                observableObserverActorStocksEntityId).Wait();
 
             Console.Write(" - Observer actors and service registered: Topic = [");
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -751,9 +792,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // The observableObserverActorStocks observable actor sends a JSON message
             Message[] messageArray =
             {
-                new Message { Body = "{'stock': 'AAAA', 'value': 56}" },
-                new Message { Body = "{'stock': 'BBBB', 'value': 675}" },
-                new Message { Body = "{'stock': 'CCCC', 'value': 39}" }
+                new Message {Body = "{'stock': 'AAAA', 'value': 56}"},
+                new Message {Body = "{'stock': 'BBBB', 'value': 675}"},
+                new Message {Body = "{'stock': 'CCCC', 'value': 39}"}
             };
             foreach (Message message in messageArray)
             {
@@ -811,7 +852,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Console.WriteLine("] topic.");
 
             // Retrieve observables by topic from the registry
-            string[] topicArray = { "Stocks" };
+            string[] topicArray = {"Stocks"};
             foreach (string t in topicArray)
             {
                 gatewayRequest = new GatewayRequest
@@ -821,9 +862,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/registry/service/get");
                 string json = response.Content.ReadAsStringAsync().Result;
                 if (string.IsNullOrWhiteSpace(json))
-                {
                     continue;
-                }
                 IEnumerable<ShortEntityId> observableList = JsonConvert.DeserializeObject<IEnumerable<ShortEntityId>>(json);
                 Console.Write(" - Observables for [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -848,7 +887,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             gatewayRequest = new GatewayRequest
             {
                 Topic = topic,
-                FilterExpressions = new List<string> { filterExpressionForMsftTicker },
+                FilterExpressions = new List<string> {filterExpressionForMsftTicker},
                 ObserverEntityId = new ShortEntityId(2, TestObservableObserverServiceUri),
                 ObservableEntityId = entityId
             };
@@ -868,7 +907,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             gatewayRequest = new GatewayRequest
             {
                 Topic = topic,
-                FilterExpressions = new List<string> { filterExpressionForAmznTicker },
+                FilterExpressions = new List<string> {filterExpressionForAmznTicker},
                 ObserverEntityId = new ShortEntityId("BBBB", TestObservableObserverActorUri),
                 ObservableEntityId = entityId
             };
@@ -888,7 +927,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             gatewayRequest = new GatewayRequest
             {
                 Topic = topic,
-                FilterExpressions = new List<string> { filterExpressionForOrclTicker },
+                FilterExpressions = new List<string> {filterExpressionForOrclTicker},
                 ObserverEntityId = new ShortEntityId("CCCC", TestObservableObserverActorUri),
                 ObservableEntityId = entityId
             };
@@ -907,9 +946,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // The observable actor sends an array of JSON messages
             Message[] messageArray =
             {
-                new Message { Body = "{'stock': 'AAAA', 'value': 56}" },
-                new Message { Body = "{'stock': 'BBBB', 'value': 675}" },
-                new Message { Body = "{'stock': 'CCCC', 'value': 39}" }
+                new Message {Body = "{'stock': 'AAAA', 'value': 56}"},
+                new Message {Body = "{'stock': 'BBBB', 'value': 675}"},
+                new Message {Body = "{'stock': 'CCCC', 'value': 39}"}
             };
 
             gatewayRequest = new GatewayRequest
@@ -991,24 +1030,21 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Uri messageBoxServiceUri = new Uri($"{ApplicationUri}{MessageBoxServiceUri}");
             ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(messageBoxServiceUri).Result;
             Console.WriteLine(" - Partition list for the MessageBoxService retrieved.");
-            int messageBoxServicePartitionCount = servicePartitionList != null && servicePartitionList.Any() ? servicePartitionList.Count : 1;
+            int messageBoxServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
 
-            IMessageBoxService messageBoxServiceProxy = ServiceProxy.Create<IMessageBoxService>(messageBoxServiceUri,
-                                                                                                new ServicePartitionKey(PartitionResolver.Resolve(entityId.EntityUri.AbsoluteUri, messageBoxServicePartitionCount)));
+            IMessageBoxService messageBoxServiceProxy = ServiceProxy.Create<IMessageBoxService>(
+                messageBoxServiceUri,
+                new ServicePartitionKey(PartitionResolver.Resolve(entityId.EntityUri.AbsoluteUri, messageBoxServicePartitionCount)));
             Console.WriteLine(" - ServiceProxy for the MessageBoxService created.");
             Console.Write(" - Enter the number of messages to write: ");
             string value = Console.ReadLine();
             int n;
             if (!int.TryParse(value, out n))
-            {
                 n = 3;
-            }
             Message[] messageArray = new Message[n];
             for (int k = 0; k < n; k++)
-            {
                 messageArray[k] = new Message {Body = $"Test{k + 1}"};
-            }
-            
+
             messageBoxServiceProxy.WriteMessagesAsync(entityId.EntityUri, messageArray).Wait();
 
             Console.Write(" - Messages for the observer actor [");
@@ -1026,9 +1062,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 
             IEnumerable<Message> messages = observableObserverActorP.ReadMessagesFromMessageBoxAsync().Result;
             if (messages == null)
-            {
                 return;
-            }
 
             Console.Write(" - Observer [");
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -1066,14 +1100,10 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             string value = Console.ReadLine();
             int n;
             if (!int.TryParse(value, out n))
-            {
                 n = 3;
-            }
             Message[] messageArray = new Message[n];
             for (int k = 0; k < n; k++)
-            {
-                messageArray[k] = new Message { Body = $"Test{k + 1}" };
-            }
+                messageArray[k] = new Message {Body = $"Test{k + 1}"};
 
             // Create a request message to write messages to MessageBox service via the gateway service 
             GatewayRequest gatewayRequest = new GatewayRequest
@@ -1108,14 +1138,10 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/messagebox/service/read");
             string json = response.Content.ReadAsStringAsync().Result;
             if (string.IsNullOrWhiteSpace(json))
-            {
                 return;
-            }
             IEnumerable<Message> messages = JsonConvert.DeserializeObject<IEnumerable<Message>>(json);
             if (messages == null)
-            {
                 return;
-            }
 
             Console.Write(" - Observer [");
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -1157,9 +1183,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                     {
                         Int64RangePartitionInformation partitionInformation = partition.PartitionInformation as Int64RangePartitionInformation;
                         if (partitionInformation == null)
-                        {
                             continue;
-                        }
                         long partitionKey = partitionInformation.LowKey;
 
                         // Creates CancellationTokenSource
@@ -1175,7 +1199,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                         List<ActorInformation> actorInformationList = new List<ActorInformation>();
                         do
                         {
-                            PagedResult<ActorInformation> queryResult = actorServiceProxy.GetActorsAsync(continuationToken, cancellationTokenSource.Token).Result;
+                            PagedResult<ActorInformation> queryResult =
+                                actorServiceProxy.GetActorsAsync(continuationToken, cancellationTokenSource.Token).Result;
                             if (queryResult.Items.Any())
                             {
                                 actorInformationList.AddRange(queryResult.Items);
@@ -1187,9 +1212,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                         // Prints results
                         Console.WriteLine($"                          > Partition [{partitionInformation.Id}] contains [{actorCount}] actors.");
                         foreach (ActorInformation actorInformation in actorInformationList)
-                        {
                             Console.WriteLine($"                            > ActorId [{actorInformation.ActorId}]");
-                        }
                         total += actorCount;
                     }
 
@@ -1225,9 +1248,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                     {
                         Int64RangePartitionInformation partitionInformation = partition.PartitionInformation as Int64RangePartitionInformation;
                         if (partitionInformation == null)
-                        {
                             continue;
-                        }
                         long partitionKey = partitionInformation.LowKey;
 
                         // Creates CancellationTokenSource
@@ -1243,7 +1264,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                         List<ActorInformation> actorInformationList = new List<ActorInformation>();
                         do
                         {
-                            PagedResult<ActorInformation> queryResult = actorServiceProxy.GetActorsAsync(continuationToken, cancellationTokenSource.Token).Result;
+                            PagedResult<ActorInformation> queryResult =
+                                actorServiceProxy.GetActorsAsync(continuationToken, cancellationTokenSource.Token).Result;
                             if (queryResult.Items.Any())
                             {
                                 actorInformationList.AddRange(queryResult.Items);
@@ -1271,18 +1293,18 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 PrintException(ex);
             }
         }
+
         #endregion
 
         #region Private Static Methods
+
         private static void ReadConfiguration()
         {
             try
             {
                 GatewayUrl = ConfigurationManager.AppSettings[GatewayUrlParameter] ?? DefaultGatewayUrl;
                 if (string.IsNullOrWhiteSpace(GatewayUrl))
-                {
                     throw new ArgumentException($"The [{GatewayUrlParameter}] setting in the configuration file is null or invalid.");
-                }
             }
             catch (Exception ex)
             {
@@ -1295,12 +1317,12 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             uri1 = uri1.TrimEnd('/');
             uri2 = uri2.TrimStart('/');
             return $"{uri1}/{uri2}";
-        }       
+        }
 
         private static int SelectOption()
         {
             // Create a line
-            
+
             int optionCount = TestList.Count + 1;
 
             Console.WriteLine("Select an option:");
@@ -1328,10 +1350,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             // Select an option
             Console.WriteLine($"Press a key between [1] and [{optionCount}]: ");
             char key = 'a';
-            while (key < '1' || key > ('1' + optionCount))
-            {
+            while ((key < '1') || (key > '1' + optionCount))
                 key = Console.ReadKey(true).KeyChar;
-            }
             return key - '1' + 1;
         }
 
@@ -1350,18 +1370,17 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Console.WriteLine(Line);
         }
 
-        private static void InternalPrintException(Exception ex,
-                                                   string sourceFilePath = "",
-                                                   string memberName = "",
-                                                   int sourceLineNumber = 0)
+        private static void InternalPrintException(
+            Exception ex,
+            string sourceFilePath = "",
+            string memberName = "",
+            int sourceLineNumber = 0)
         {
             AggregateException exception = ex as AggregateException;
             if (exception != null)
             {
                 foreach (Exception e in exception.InnerExceptions)
-                {
                     if (sourceFilePath != null) InternalPrintException(e, sourceFilePath, memberName, sourceLineNumber);
-                }
                 return;
             }
             Console.ForegroundColor = ConsoleColor.Green;
@@ -1393,9 +1412,11 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(!string.IsNullOrWhiteSpace(ex.Message) ? ex.Message : "An error occurred.");
         }
+
         #endregion
 
         #region Private Constants
+
         //************************************
         // Private Constants
         //************************************
@@ -1421,7 +1442,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
     public class Test
     {
         public string Name { get; set; }
+
         public string Description { get; set; }
+
         public Action Action { get; set; }
     }
 }

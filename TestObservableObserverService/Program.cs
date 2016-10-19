@@ -1,20 +1,38 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
+
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
 
 namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverService
 {
+    #region Using Directives
+
     using System;
     using System.Diagnostics;
     using System.Threading;
     using Microsoft.AzureCat.Samples.ObserverPattern.Framework;
     using Microsoft.ServiceFabric.Services.Runtime;
 
+    #endregion
+
     internal static class Program
     {
         /// <summary>
-        /// This is the entry point of the service host process.
+        ///     This is the entry point of the service host process.
         /// </summary>
         private static void Main()
         {
@@ -24,8 +42,9 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverServi
                 // RegisterServiceType maps a service type name to a .NET class.
                 // When Service Fabric creates an instance of this service type,
                 // an instance of the class is created in this host process.
-                ServiceRuntime.RegisterServiceAsync("TestObservableObserverServiceType",
-                                                    context => new TestObservableObserverService(context)).GetAwaiter().GetResult();
+                ServiceRuntime.RegisterServiceAsync(
+                    "TestObservableObserverServiceType",
+                    context => new TestObservableObserverService(context)).GetAwaiter().GetResult();
 
                 ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(TestObservableObserverService).Name);
 

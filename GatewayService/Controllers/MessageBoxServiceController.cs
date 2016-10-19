@@ -1,13 +1,32 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿#region Copyright
 
+// //=======================================================================================
+// // Microsoft Azure Customer Advisory Team  
+// //
+// // This sample is supplemental to the technical guidance published on the community
+// // blog at http://blogs.msdn.com/b/paolos/. 
+// // 
+// // Author: Paolo Salvatori
+// //=======================================================================================
+// // Copyright © 2016 Microsoft Corporation. All rights reserved.
+// // 
+// // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER 
+// // EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF 
+// // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. YOU BEAR THE RISK OF USING IT.
+// //=======================================================================================
+
+#endregion
+
+// ReSharper disable once CheckNamespace
 namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
 {
+    #region Using Directives
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
+    using System.Net.Http;
     using System.Threading.Tasks;
     using System.Web.Http;
     using Microsoft.AzureCat.Samples.ObserverPattern.Entities;
@@ -16,6 +35,8 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
     using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
 
+    #endregion
+
     public class MessageBoxServiceController : ApiController
     {
         #region Private Static Methods
@@ -23,12 +44,10 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
         private static IMessageBoxService GetServiceProxy(long? partitionKey, Uri serviceUri)
         {
             if (serviceUri == null)
-            {
                 throw new ArgumentException($"Parameter {nameof(serviceUri)} is null or invalid.", nameof(serviceUri));
-            }
-            return partitionKey.HasValue ?
-                ServiceProxy.Create<IMessageBoxService>(serviceUri, new ServicePartitionKey(partitionKey.Value)) :
-                ServiceProxy.Create<IMessageBoxService>(serviceUri);
+            return partitionKey.HasValue
+                ? ServiceProxy.Create<IMessageBoxService>(serviceUri, new ServicePartitionKey(partitionKey.Value))
+                : ServiceProxy.Create<IMessageBoxService>(serviceUri);
         }
 
         #endregion
@@ -51,7 +70,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
         }
 
         /// <summary>
-        /// Read messages stored for an observer.
+        ///     Read messages stored for an observer.
         /// </summary>
         /// <param name="request">Request message.</param>
         /// <returns>The asynchronous result of the operation.</returns>
@@ -63,18 +82,16 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
             {
                 // Validates parameter
                 if (request.ObserverEntityId == null)
-                {
                     throw new ArgumentException($"Parameter {nameof(request)} is null or invalid.", nameof(request));
-                }
 
                 // Gets service proxy
-                IMessageBoxService proxy = GetServiceProxy(PartitionResolver.Resolve(request.ObserverEntityId.EntityUri.AbsoluteUri,
-                                                                                     OwinCommunicationListener.MessageBoxServicePartitionCount),
-                                                           OwinCommunicationListener.MessageBoxServiceUri);
+                IMessageBoxService proxy = GetServiceProxy(
+                    PartitionResolver.Resolve(
+                        request.ObserverEntityId.EntityUri.AbsoluteUri,
+                        OwinCommunicationListener.MessageBoxServicePartitionCount),
+                    OwinCommunicationListener.MessageBoxServiceUri);
                 if (proxy == null)
-                {
                     throw new ApplicationException("The ServiceProxy cannot be null.");
-                }
 
                 // Invokes actor using proxy
                 ServiceEventSource.Current.Message($"Reading messages from the MessageBox...\r\n[Observer]: {request.ObserverEntityId}");
@@ -83,24 +100,20 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
             catch (AggregateException ex)
             {
                 if (!(ex.InnerExceptions?.Count > 0))
-                {
-                    throw;
-                }
+                    throw new HttpResponseException(this.Request.CreateErrorResponse(HttpStatusCode.NotFound, ex.Message));
                 foreach (Exception exception in ex.InnerExceptions)
-                {
                     ServiceEventSource.Current.Message(exception.Message);
-                }
-                throw;
+                throw new HttpResponseException(this.Request.CreateErrorResponse(HttpStatusCode.NotFound, ex.Message));
             }
             catch (Exception ex)
             {
                 ServiceEventSource.Current.Message(ex.Message);
-                throw;
+                throw new HttpResponseException(this.Request.CreateErrorResponse(HttpStatusCode.NotFound, ex.Message));
             }
         }
 
         /// <summary>
-        /// Write messages for an observer.
+        ///     Write messages for an observer.
         /// </summary>
         /// <param name="request">Request message.</param>
         /// <returns>The asynchronous result of the operation.</returns>
@@ -111,21 +124,19 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
             try
             {
                 // Validates parameter
-                if (request.ObserverEntityId == null ||
-                    request.Messages == null ||
+                if ((request.ObserverEntityId == null) ||
+                    (request.Messages == null) ||
                     !request.Messages.Any())
-                {
                     throw new ArgumentException($"Parameter {nameof(request)} is null or invalid.", nameof(request));
-                }
 
                 // Gets service proxy
-                IMessageBoxService proxy = GetServiceProxy(PartitionResolver.Resolve(request.ObserverEntityId.EntityUri.AbsoluteUri,
-                                                                                     OwinCommunicationListener.MessageBoxServicePartitionCount),
-                                                           OwinCommunicationListener.MessageBoxServiceUri);
+                IMessageBoxService proxy = GetServiceProxy(
+                    PartitionResolver.Resolve(
+                        request.ObserverEntityId.EntityUri.AbsoluteUri,
+                        OwinCommunicationListener.MessageBoxServicePartitionCount),
+                    OwinCommunicationListener.MessageBoxServiceUri);
                 if (proxy == null)
-                {
                     throw new ApplicationException("The ServiceProxy cannot be null.");
-                }
 
                 // Invokes actor using proxy
                 ServiceEventSource.Current.Message($"Writing messages to the MessageBox...\r\n[Observer]: {request.ObserverEntityId}");
@@ -134,21 +145,18 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.GatewayService
             catch (AggregateException ex)
             {
                 if (!(ex.InnerExceptions?.Count > 0))
-                {
-                    throw;
-                }
+                    throw new HttpResponseException(this.Request.CreateErrorResponse(HttpStatusCode.NotFound, ex.Message));
                 foreach (Exception exception in ex.InnerExceptions)
-                {
                     ServiceEventSource.Current.Message(exception.Message);
-                }
-                throw;
+                throw new HttpResponseException(this.Request.CreateErrorResponse(HttpStatusCode.NotFound, ex.Message));
             }
             catch (Exception ex)
             {
                 ServiceEventSource.Current.Message(ex.Message);
-                throw;
+                throw new HttpResponseException(this.Request.CreateErrorResponse(HttpStatusCode.NotFound, ex.Message));
             }
         }
+
         #endregion
     }
 }
