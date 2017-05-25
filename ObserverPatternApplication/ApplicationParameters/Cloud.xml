@@ -5,18 +5,23 @@
     <Parameter Name="GatewayService_ServiceRelativePath" Value="gateway" />
     <Parameter Name="GatewayService_MaxRetryCount" Value="3" />
     <Parameter Name="GatewayService_BackoffDelay" Value="1" />
+    <Parameter Name="GatewayService_PlacementConstraints" Value="(NodeType==YodaNT0)" />
     <Parameter Name="MessageBoxService_PartitionCount" Value="3" />
     <Parameter Name="MessageBoxService_MinReplicaSetSize" Value="2" />
     <Parameter Name="MessageBoxService_TargetReplicaSetSize" Value="3" />
+    <Parameter Name="MessageBoxService_PlacementConstraints" Value="(NodeType==YodaNT1)" />
     <Parameter Name="RegistryService_PartitionCount" Value="1" />
     <Parameter Name="RegistryService_MinReplicaSetSize" Value="2" />
     <Parameter Name="RegistryService_TargetReplicaSetSize" Value="3" />
+    <Parameter Name="RegistryService_PlacementConstraints" Value="(NodeType==YodaNT1)" />
     <Parameter Name="TestObservableObserverActor_PartitionCount" Value="3" />
     <Parameter Name="TestObservableObserverActor_MinReplicaSetSize" Value="2" />
     <Parameter Name="TestObservableObserverActor_TargetReplicaSetSize" Value="3" />
+    <Parameter Name="TestObservableObserverActor_PlacementConstraints" Value="(NodeType==YodaNT1)" />
     <Parameter Name="TestObservableObserverService_MinReplicaSetSize" Value="2" />
     <Parameter Name="TestObservableObserverService_PartitionCount" Value="1" />
     <Parameter Name="TestObservableObserverService_TargetReplicaSetSize" Value="3" />
+    <Parameter Name="TestObservableObserverService_PlacementConstraints" Value="(NodeType==YodaNT0)" />
     <Parameter Name="Framework_RegistryServiceUri" Value="fabric:/ObserverPattern/RegistryService" />
     <Parameter Name="Framework_MessageBoxServiceUri" Value="fabric:/ObserverPattern/MessageBoxService" />
     <Parameter Name="MessageBoxService_MaxQueueSize" Value="1000" />

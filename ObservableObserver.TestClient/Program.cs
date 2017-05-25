@@ -151,654 +151,508 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
 
         private static void IoTTestViaGateway()
         {
-            // Write Line
-            Console.WriteLine(Line);
-
-            // Create ShortEntityId for observable service
-            ShortEntityId observableObserverServiceEntityId = new ShortEntityId(1, new Uri($"{ApplicationUri}{TestObservableObserverService}"));
-            Console.WriteLine(" - ShortEntityId for the observable service partition created.");
-
-            // Create request message for observable service
-            GatewayRequest gatewayRequest = new GatewayRequest
+            try
             {
-                ObservableEntityId = observableObserverServiceEntityId,
-                UseObserverAsProxy = true
-            };
+                // Write Line
+                Console.WriteLine(Line);
 
-            // Clear all observers and publications for observable service partition
-            SendRequestToGateway(gatewayRequest, "api/observable/service/clear");
-            Console.WriteLine(" - All observers and publications cleared for the observable service partition.");
+                // Create ShortEntityId for observable service
+                ShortEntityId observableObserverServiceEntityId = new ShortEntityId(1, new Uri($"{ApplicationUri}{TestObservableObserverService}"));
+                Console.WriteLine(" - ShortEntityId for the observable service partition created.");
 
-            // Register observable service partition
-            string topic = "Rome";
-            gatewayRequest.Topic = topic;
-            SendRequestToGateway(gatewayRequest, "api/observable/service/register");
-            Console.Write(" - Service partition registered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
+                // Create request message for observable service
+                GatewayRequest gatewayRequest = new GatewayRequest
+                {
+                    ObservableEntityId = observableObserverServiceEntityId,
+                    UseObserverAsProxy = true
+                };
 
-            // Create ShortEntityId for observable actor
-            ShortEntityId observableObserverActorEntityId = new ShortEntityId("MilanSite", TestObservableObserverActorUri);
-            Console.WriteLine(" - ShortEntityId for the observable actor created.");
+                // Clear all observers and publications for observable service partition
+                SendRequestToGateway(gatewayRequest, "api/observable/service/clear");
+                Console.WriteLine(" - All observers and publications cleared for the observable service partition.");
 
-            // Create request message for observable service
-            gatewayRequest = new GatewayRequest
-            {
-                ObservableEntityId = observableObserverActorEntityId,
-                UseObserverAsProxy = true
-            };
+                // Register observable service partition
+                string topic = "Rome";
+                gatewayRequest.Topic = topic;
+                SendRequestToGateway(gatewayRequest, "api/observable/service/register");
+                Console.Write(" - Service partition registered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
 
-            // Clear all observers and publications for observable actor
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/clear");
-            Console.WriteLine(" - All observers and publications cleared for the observable actor.");
+                // Create ShortEntityId for observable actor
+                ShortEntityId observableObserverActorEntityId = new ShortEntityId("MilanSite", TestObservableObserverActorUri);
+                Console.WriteLine(" - ShortEntityId for the observable actor created.");
 
-            // Register observable actor
-            topic = "Milan";
-            gatewayRequest.Topic = topic;
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/register");
-            Console.Write(" - Actor registered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Retrieve observables by topic from the registry
-            string[] topicArray = {"Milan", "Rome"};
-            foreach (string t in topicArray)
-            {
+                // Create request message for observable service
                 gatewayRequest = new GatewayRequest
                 {
-                    Topic = t
+                    ObservableEntityId = observableObserverActorEntityId,
+                    UseObserverAsProxy = true
                 };
-                HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/registry/service/get");
-                string json = response.Content.ReadAsStringAsync().Result;
-                if (string.IsNullOrWhiteSpace(json))
-                    continue;
-                IEnumerable<ShortEntityId> observableList = JsonConvert.DeserializeObject<IEnumerable<ShortEntityId>>(json);
-                Console.Write(" - Observables for [");
+
+                // Clear all observers and publications for observable actor
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/clear");
+                Console.WriteLine(" - All observers and publications cleared for the observable actor.");
+
+                // Register observable actor
+                topic = "Milan";
+                gatewayRequest.Topic = topic;
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/register");
+                Console.Write(" - Actor registered as an observable for the [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{t}");
+                Console.Write($"{topic}");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("] topic:");
-                foreach (ShortEntityId entity in observableList)
+                Console.WriteLine("] topic.");
+
+                // Retrieve observables by topic from the registry
+                string[] topicArray = {"Milan", "Rome"};
+                foreach (string t in topicArray)
                 {
-                    Console.Write("   > ");
+                    gatewayRequest = new GatewayRequest
+                    {
+                        Topic = t
+                    };
+                    HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/registry/service/get");
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    if (string.IsNullOrWhiteSpace(json))
+                        continue;
+                    IEnumerable<ShortEntityId> observableList = JsonConvert.DeserializeObject<IEnumerable<ShortEntityId>>(json);
+                    Console.Write(" - Observables for [");
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(entity.ToString());
+                    Console.Write($"{t}");
                     Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("] topic:");
+                    foreach (ShortEntityId entity in observableList)
+                    {
+                        Console.Write("   > ");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(entity.ToString());
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
                 }
-            }
 
-            // Define filer Expressions
-            const string filterExpressionForId10 = "id != null and value != null and id = 10";
-            const string filterExpressionForId20 = "id != null and value != null and id = 20";
-            const string filterExpressionForId50 = "id != null and value != null and id = 50";
-            const string filterExpressionForId60 = "id != null and value != null and id = 60";
+                // Define filer Expressions
+                const string filterExpressionForId10 = "id != null and value != null and id = 10";
+                const string filterExpressionForId20 = "id != null and value != null and id = 20";
+                const string filterExpressionForId50 = "id != null and value != null and id = 50";
+                const string filterExpressionForId60 = "id != null and value != null and id = 60";
 
-            // Register actor observers:
-            // - topic = Milan and observable = observableObserverActorIoT
-            // - topic = Rome and observable =  observableObserverServiceIoT
-            topic = "Milan";
+                // Register actor observers:
+                // - topic = Milan and observable = observableObserverActorIoT
+                // - topic = Rome and observable =  observableObserverServiceIoT
+                topic = "Milan";
 
-            // Register observers from P to Y on topic Milan using filterExpressionForId10 as filter expression
-            foreach (char c in "PQRSTUVWXY")
-            {
+                // Register observers from P to Y on topic Milan using filterExpressionForId10 as filter expression
+                foreach (char c in "PQRSTUVWXY")
+                {
+                    gatewayRequest = new GatewayRequest
+                    {
+                        Topic = topic,
+                        FilterExpressions = new List<string> {filterExpressionForId10},
+                        ObserverEntityId = new ShortEntityId(c.ToString(), TestObservableObserverActorUri),
+                        ObservableEntityId = observableObserverActorEntityId
+                    };
+                    SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
+                }
+
+                // Z is using a different filter expression.
+                // So when the observable actor will send a JSON message,
+                // Z won't receive the message as its filter expression is not satisfied by the JSON message
+
                 gatewayRequest = new GatewayRequest
                 {
                     Topic = topic,
-                    FilterExpressions = new List<string> {filterExpressionForId10},
-                    ObserverEntityId = new ShortEntityId(c.ToString(), TestObservableObserverActorUri),
+                    FilterExpressions = new List<string> {filterExpressionForId20},
+                    ObserverEntityId = new ShortEntityId("Z", TestObservableObserverActorUri),
                     ObservableEntityId = observableObserverActorEntityId
                 };
                 SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
-            }
 
-            // Z is using a different filter expression.
-            // So when the observable actor will send a JSON message,
-            // Z won't receive the message as its filter expression is not satisfied by the JSON message
+                Console.Write(" - Observer actors registered: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Observable = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{observableObserverActorEntityId.EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
 
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                FilterExpressions = new List<string> {filterExpressionForId20},
-                ObserverEntityId = new ShortEntityId("Z", TestObservableObserverActorUri),
-                ObservableEntityId = observableObserverActorEntityId
-            };
-            SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
+                // Register observers from P to Y on topic Rome using filterExpressionForId50 as filter expression
+                topic = "Rome";
+                foreach (char c in "PQRSTUVWXY")
+                {
+                    gatewayRequest = new GatewayRequest
+                    {
+                        Topic = topic,
+                        FilterExpressions = new List<string> {filterExpressionForId50},
+                        ObserverEntityId = new ShortEntityId(c.ToString(), TestObservableObserverActorUri),
+                        ObservableEntityId = observableObserverServiceEntityId
+                    };
+                    SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
+                }
 
-            Console.Write(" - Observer actors registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observable = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{observableObserverActorEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
+                // Z is using a different filter expression.
+                // So when the observable service will send a JSON message,
+                // Z won't receive the message as its filter expression is not satisfied by the JSON message
 
-            // Register observers from P to Y on topic Rome using filterExpressionForId50 as filter expression
-            topic = "Rome";
-            foreach (char c in "PQRSTUVWXY")
-            {
                 gatewayRequest = new GatewayRequest
                 {
                     Topic = topic,
-                    FilterExpressions = new List<string> {filterExpressionForId50},
-                    ObserverEntityId = new ShortEntityId(c.ToString(), TestObservableObserverActorUri),
+                    FilterExpressions = new List<string> {filterExpressionForId60},
+                    ObserverEntityId = new ShortEntityId("Z", TestObservableObserverActorUri),
                     ObservableEntityId = observableObserverServiceEntityId
                 };
                 SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
-            }
 
-            // Z is using a different filter expression.
-            // So when the observable service will send a JSON message,
-            // Z won't receive the message as its filter expression is not satisfied by the JSON message
-
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                FilterExpressions = new List<string> {filterExpressionForId60},
-                ObserverEntityId = new ShortEntityId("Z", TestObservableObserverActorUri),
-                ObservableEntityId = observableObserverServiceEntityId
-            };
-            SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
-
-            Console.Write(" - Observer actors registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observable = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{observableObserverServiceEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observableObserverActorIoT observable actor sends a JSON message
-            topic = "Milan";
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                Messages = new[]
-                {
-                    new Message {Body = "{'id': 10, 'value': 52}"},
-                    new Message {Body = "{'id': 10, 'value': 64}"}
-                },
-                ObservableEntityId = observableObserverActorEntityId,
-                UseObserverAsProxy = true
-            };
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/notify");
-
-            Console.Write(" - Observable actor has sent the following messages. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] Messages:");
-            foreach (Message message in gatewayRequest.Messages)
-            {
-                Console.Write("   > [");
+                Console.Write(" - Observer actors registered: Topic = [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{message.Body}");
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Observable = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{observableObserverServiceEntityId.EntityUri.AbsoluteUri}");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("]");
-            }
 
-            // The observableObserverService observable sends a JSON message
-            topic = "Rome";
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                Messages = new[]
+                // The observableObserverActorIoT observable actor sends a JSON message
+                topic = "Milan";
+                gatewayRequest = new GatewayRequest
                 {
-                    new Message {Body = "{'id': 50, 'value': 42}"},
-                    new Message {Body = "{'id': 50, 'value': 48}"}
-                },
-                ObservableEntityId = observableObserverServiceEntityId,
-                UseObserverAsProxy = true
-            };
-            SendRequestToGateway(gatewayRequest, "api/observable/service/notify");
+                    Topic = topic,
+                    Messages = new[]
+                    {
+                        new Message {Body = "{'id': 10, 'value': 52}"},
+                        new Message {Body = "{'id': 10, 'value': 64}"}
+                    },
+                    ObservableEntityId = observableObserverActorEntityId,
+                    UseObserverAsProxy = true
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/notify");
 
-            Console.Write(" - Observable service partition has sent the following messages. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] Messages:");
-            foreach (Message message in gatewayRequest.Messages)
-            {
-                Console.Write("   > [");
+                Console.Write(" - Observable actor has sent the following messages. Topic = [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{message.Body}");
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] Messages:");
+                foreach (Message message in gatewayRequest.Messages)
+                {
+                    Console.Write("   > [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{message.Body}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("]");
+                }
+
+                // The observableObserverService observable sends a JSON message
+                topic = "Rome";
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    Messages = new[]
+                    {
+                        new Message {Body = "{'id': 50, 'value': 42}"},
+                        new Message {Body = "{'id': 50, 'value': 48}"}
+                    },
+                    ObservableEntityId = observableObserverServiceEntityId,
+                    UseObserverAsProxy = true
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/service/notify");
+
+                Console.Write(" - Observable service partition has sent the following messages. Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] Messages:");
+                foreach (Message message in gatewayRequest.Messages)
+                {
+                    Console.Write("   > [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{message.Body}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("]");
+                }
+
+                // Unregister one of the observers
+                topic = "Milan";
+                ShortEntityId entityId = new ShortEntityId("X", TestObservableObserverActorUri);
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    ObserverEntityId = entityId,
+                    ObservableEntityId = observableObserverActorEntityId,
+                    UseObserverAsProxy = true
+                };
+                SendRequestToGateway(gatewayRequest, "api/observer/actor/unregister");
+
+                Console.Write(" - Observer unregistered: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Observer = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{entityId.EntityUri.AbsoluteUri}");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("]");
-            }
 
-            // Unregister one of the observers
-            topic = "Milan";
-            ShortEntityId entityId = new ShortEntityId("X", TestObservableObserverActorUri);
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                ObserverEntityId = entityId,
-                ObservableEntityId = observableObserverActorEntityId,
-                UseObserverAsProxy = true
-            };
-            SendRequestToGateway(gatewayRequest, "api/observer/actor/unregister");
-
-            Console.Write(" - Observer unregistered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observer = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{entityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observable sends a text, non-JSON message.
-            // actor X is no longer receiving messages as it unregistered as observer of observable A for Milan topic.
-            // Note: the message is not in JSON format, hence the message is broadcasted to all observers as filter expressions
-            //       are not evaluated.
-            topic = "Milan";
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                Messages = new[]
+                // The observable sends a text, non-JSON message.
+                // actor X is no longer receiving messages as it unregistered as observer of observable A for Milan topic.
+                // Note: the message is not in JSON format, hence the message is broadcasted to all observers as filter expressions
+                //       are not evaluated.
+                topic = "Milan";
+                gatewayRequest = new GatewayRequest
                 {
-                    new Message {Body = "This is a NON-JSON message"},
-                    new Message {Body = "This is another NON-JSON message"}
-                },
-                ObservableEntityId = observableObserverActorEntityId,
-                UseObserverAsProxy = true
-            };
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/notify");
+                    Topic = topic,
+                    Messages = new[]
+                    {
+                        new Message {Body = "This is a NON-JSON message"},
+                        new Message {Body = "This is another NON-JSON message"}
+                    },
+                    ObservableEntityId = observableObserverActorEntityId,
+                    UseObserverAsProxy = true
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/notify");
 
-            Console.Write(" - Observable actor has sent the following messages. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] Messages:");
-            foreach (Message message in gatewayRequest.Messages)
-            {
-                Console.Write("   > [");
+                Console.Write(" - Observable actor has sent the following messages. Topic = [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{message.Body}");
+                Console.Write($"{topic}");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("]");
+                Console.WriteLine("] Messages:");
+                foreach (Message message in gatewayRequest.Messages)
+                {
+                    Console.Write("   > [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{message.Body}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("]");
+                }
+
+                // Unregister the observables
+                topic = "Milan";
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    ObservableEntityId = observableObserverActorEntityId
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/unregister");
+
+                Console.Write(" - Actor unregistered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                topic = "Rome";
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    ObservableEntityId = observableObserverServiceEntityId,
+                    UseObserverAsProxy = true
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/service/unregister");
+
+                Console.Write(" - Service partition unregistered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Write Line
+                Console.WriteLine(Line);
             }
-
-            // Unregister the observables
-            topic = "Milan";
-            gatewayRequest = new GatewayRequest
+            catch (Exception ex)
             {
-                Topic = topic,
-                ObservableEntityId = observableObserverActorEntityId
-            };
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/unregister");
-
-            Console.Write(" - Actor unregistered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            topic = "Rome";
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                ObservableEntityId = observableObserverServiceEntityId,
-                UseObserverAsProxy = true
-            };
-            SendRequestToGateway(gatewayRequest, "api/observable/service/unregister");
-
-            Console.Write(" - Service partition unregistered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Write Line
-            Console.WriteLine(Line);
+                PrintException(ex);
+            }
         }
 
         private static void IoTTestViaProxy()
         {
-            // Write Line
-            Console.WriteLine(Line);
-
-            // Create observable service proxy
-            IClientObservableService observableObserverServiceIoT = ServiceProxy.Create<IClientObservableService>(
-                TestObservableObserverServiceUri,
-                new ServicePartitionKey(1));
-            Console.WriteLine(" - ServiceProxy for the observable service partition created.");
-
-            // Clear all observers and publications.
-            observableObserverServiceIoT.ClearObserversAndPublicationsAsync(true).Wait();
-            Console.WriteLine(" - All observers and publications cleared for the observable service partition.");
-
-            // Register observable service
-            string topic = "Rome";
-            observableObserverServiceIoT.RegisterObservableServiceAsync(topic).Wait();
-            Console.Write(" - Service partition registered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Create observable actor proxy
-            IClientObservableObserverActor observableObserverActorIoT = ActorProxy.Create<IClientObservableObserverActor>(
-                new ActorId("MilanSite"),
-                TestObservableObserverActorUri);
-            Console.WriteLine(" - ActorProxy for the observable actor created.");
-
-            // Clear all observers and publications.
-            observableObserverActorIoT.ClearObserversAndPublicationsAsync(true).Wait();
-            Console.WriteLine(" - All observers and publications cleared for the observable actor.");
-
-            // Register observable actors
-            topic = "Milan";
-            observableObserverActorIoT.RegisterObservableActorAsync(topic).Wait();
-            Console.Write(" - Actor registered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Retrieve observables by topic from the registry
-            Uri registryServiceUri = new Uri($"{ApplicationUri}{RegistryServiceUri}");
-            ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(registryServiceUri).Result;
-            int registryServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
-            string[] topicArray = {"Milan", "Rome"};
-            foreach (string t in topicArray)
+            try
             {
-                IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(
-                    registryServiceUri,
-                    new ServicePartitionKey(PartitionResolver.Resolve(t, registryServicePartitionCount)));
-                IEnumerable<EntityId> observableList = registryServiceProxy.QueryObservablesAsync(t, null).Result;
-                Console.Write(" - Observables for [");
+                // Write Line
+                Console.WriteLine(Line);
+
+                // Create observable service proxy
+                IClientObservableService observableObserverServiceIoT = ServiceProxy.Create<IClientObservableService>(
+                    TestObservableObserverServiceUri,
+                    new ServicePartitionKey(1));
+                Console.WriteLine(" - ServiceProxy for the observable service partition created.");
+
+                // Clear all observers and publications.
+                observableObserverServiceIoT.ClearObserversAndPublicationsAsync(true).Wait();
+                Console.WriteLine(" - All observers and publications cleared for the observable service partition.");
+
+                // Register observable service
+                string topic = "Rome";
+                observableObserverServiceIoT.RegisterObservableServiceAsync(topic).Wait();
+                Console.Write(" - Service partition registered as an observable for the [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{t}");
+                Console.Write($"{topic}");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("] topic:");
-                foreach (EntityId entity in observableList)
+                Console.WriteLine("] topic.");
+
+                // Create observable actor proxy
+                IClientObservableObserverActor observableObserverActorIoT = ActorProxy.Create<IClientObservableObserverActor>(
+                    new ActorId("MilanSite"),
+                    TestObservableObserverActorUri);
+                Console.WriteLine(" - ActorProxy for the observable actor created.");
+
+                // Clear all observers and publications.
+                observableObserverActorIoT.ClearObserversAndPublicationsAsync(true).Wait();
+                Console.WriteLine(" - All observers and publications cleared for the observable actor.");
+
+                // Register observable actors
+                topic = "Milan";
+                observableObserverActorIoT.RegisterObservableActorAsync(topic).Wait();
+                Console.Write(" - Actor registered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Retrieve observables by topic from the registry
+                Uri registryServiceUri = new Uri($"{ApplicationUri}{RegistryServiceUri}");
+                ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(registryServiceUri).Result;
+                int registryServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
+                string[] topicArray = {"Milan", "Rome"};
+                foreach (string t in topicArray)
                 {
-                    Console.Write("   > ");
+                    IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(
+                        registryServiceUri,
+                        new ServicePartitionKey(PartitionResolver.Resolve(t, registryServicePartitionCount)));
+                    IEnumerable<EntityId> observableList = registryServiceProxy.QueryObservablesAsync(t, null).Result;
+                    Console.Write(" - Observables for [");
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(entity.ToString());
+                    Console.Write($"{t}");
                     Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("] topic:");
+                    foreach (EntityId entity in observableList)
+                    {
+                        Console.Write("   > ");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(entity.ToString());
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
                 }
-            }
 
-            // Create observer actor proxies
-            IClientObserverActor observableObserverActorP = ActorProxy.Create<IClientObserverActor>(new ActorId("P"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorQ = ActorProxy.Create<IClientObserverActor>(new ActorId("Q"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorR = ActorProxy.Create<IClientObserverActor>(new ActorId("R"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorS = ActorProxy.Create<IClientObserverActor>(new ActorId("S"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorT = ActorProxy.Create<IClientObserverActor>(new ActorId("T"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorU = ActorProxy.Create<IClientObserverActor>(new ActorId("U"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorV = ActorProxy.Create<IClientObserverActor>(new ActorId("V"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorW = ActorProxy.Create<IClientObserverActor>(new ActorId("W"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorX = ActorProxy.Create<IClientObserverActor>(new ActorId("X"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorY = ActorProxy.Create<IClientObserverActor>(new ActorId("Y"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorZ = ActorProxy.Create<IClientObserverActor>(new ActorId("Z"), TestObservableObserverActorUri);
-            Console.WriteLine(" - ActorProxy for the observer actors created.");
+                // Create observer actor proxies
+                IClientObserverActor observableObserverActorP = ActorProxy.Create<IClientObserverActor>(new ActorId("P"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorQ = ActorProxy.Create<IClientObserverActor>(new ActorId("Q"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorR = ActorProxy.Create<IClientObserverActor>(new ActorId("R"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorS = ActorProxy.Create<IClientObserverActor>(new ActorId("S"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorT = ActorProxy.Create<IClientObserverActor>(new ActorId("T"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorU = ActorProxy.Create<IClientObserverActor>(new ActorId("U"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorV = ActorProxy.Create<IClientObserverActor>(new ActorId("V"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorW = ActorProxy.Create<IClientObserverActor>(new ActorId("W"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorX = ActorProxy.Create<IClientObserverActor>(new ActorId("X"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorY = ActorProxy.Create<IClientObserverActor>(new ActorId("Y"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorZ = ActorProxy.Create<IClientObserverActor>(new ActorId("Z"), TestObservableObserverActorUri);
+                Console.WriteLine(" - ActorProxy for the observer actors created.");
 
-            // Get observables identity
-            EntityId observableObserverActorIoTEntityId = observableObserverActorIoT.GetEntityIdAsync().Result;
-            Console.WriteLine(" - EntityId for the observable service partition retrieved.");
+                // Get observables identity
+                EntityId observableObserverActorIoTEntityId = observableObserverActorIoT.GetEntityIdAsync().Result;
+                Console.WriteLine(" - EntityId for the observable service partition retrieved.");
 
-            EntityId observableObserverServiceIoTEntityId = observableObserverServiceIoT.GetEntityIdAsync().Result;
-            Console.WriteLine(" - EntityId for the observable actor retrieved.");
+                EntityId observableObserverServiceIoTEntityId = observableObserverServiceIoT.GetEntityIdAsync().Result;
+                Console.WriteLine(" - EntityId for the observable actor retrieved.");
 
-            // Define filer Expressions
-            const string filterExpressionForId10 = "id != null and value != null and id = 10";
-            const string filterExpressionForId20 = "id != null and value != null and id = 20";
-            const string filterExpressionForId50 = "id != null and value != null and id = 50";
-            const string filterExpressionForId60 = "id != null and value != null and id = 60";
+                // Define filer Expressions
+                const string filterExpressionForId10 = "id != null and value != null and id = 10";
+                const string filterExpressionForId20 = "id != null and value != null and id = 20";
+                const string filterExpressionForId50 = "id != null and value != null and id = 50";
+                const string filterExpressionForId60 = "id != null and value != null and id = 60";
 
-            // Register actor observers:
-            // - topic = Milan and observable = observableObserverActorIoT
-            // - topic = Rome and observable =  observableObserverServiceIoT
-            topic = "Milan";
+                // Register actor observers:
+                // - topic = Milan and observable = observableObserverActorIoT
+                // - topic = Rome and observable =  observableObserverServiceIoT
+                topic = "Milan";
 
-            observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
-            observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId).Wait();
+                observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
+                observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId10}, observableObserverActorIoTEntityId)
+                    .Wait();
 
-            // When the observable for Milan topic will send a JSON message,
-            // Z won't receive the message as its filter expression is not satisfied by the JSON message
-            observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId20}, observableObserverActorIoTEntityId).Wait();
+                // When the observable for Milan topic will send a JSON message,
+                // Z won't receive the message as its filter expression is not satisfied by the JSON message
+                observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId20}, observableObserverActorIoTEntityId)
+                    .Wait();
 
-            Console.Write(" - Observer actors registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observable = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{observableObserverActorIoTEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            topic = "Rome";
-
-            observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-            observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId).Wait();
-
-            // The observableObserverActorIoT observable actor for Milan topic registers as an observer:
-            // - topic = Rome and observable =  observableObserverServiceIoT
-            observableObserverActorIoT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
-                .Wait();
-
-            // When the observable for Rome topic will send a JSON message,
-            // Z won't receive the message as its filter expression is not satisfied by the JSON message
-            observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId60}, observableObserverServiceIoTEntityId).Wait();
-
-            Console.Write(" - Observer actors registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observable = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{observableObserverServiceIoTEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observableObserverActorIoT observable actor sends a JSON message
-            topic = "Milan";
-            Message message = new Message {Body = "{'id': 10, 'value': 52}"};
-            observableObserverActorIoT.NotifyObserversAsync("Milan", message, true).Wait();
-
-            Console.Write(" - Observable actor has sent a message. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Messages = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{message.Body}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observableObserverServiceIoT observable service sends a JSON message
-            topic = "Rome";
-            message = new Message {Body = "{'id': 50, 'value': 52}"};
-            observableObserverServiceIoT.NotifyObserversAsync(topic, message, true).Wait();
-
-            Console.Write(" - Observable service partition has sent a message. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Messages = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{message.Body}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // Unregister one of the observers
-            topic = "Milan";
-            observableObserverActorX.UnregisterObserverActorAsync(topic, observableObserverActorIoTEntityId).Wait();
-
-            Console.Write(" - Actor unregistered as an observer: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observer = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{new EntityId(new ActorId("X"), TestObservableObserverActorUri).EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observable sends a text, non-JSON message.
-            // observableObserverActorX is no longer receiving messages as it unregistered as observer of observable A for Milan topic.
-            // Note: the message is not in JSON format, hence the message is broadcasted to all observers as filter expressions
-            //       are not evaluated.
-            topic = "Milan";
-            message = new Message {Body = "Non-JSON message"};
-            observableObserverActorIoT.NotifyObserversAsync(topic, message, true).Wait();
-
-            Console.Write(" - Observable actor has sent a message. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Messages = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{message.Body}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-
-            // Unregister the observables
-            topic = "Milan";
-            observableObserverActorIoT.UnregisterObservableActorAsync(topic, true).Wait();
-
-            Console.Write(" - Actor unregistered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            topic = "Rome";
-            observableObserverServiceIoT.UnregisterObservableServiceAsync(topic, true).Wait();
-
-            Console.Write(" - Service partition unregistered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Write Line
-            Console.WriteLine(Line);
-        }
-
-        private static void StockMarketTestViaProxy()
-        {
-            // Write Line
-            Console.WriteLine(Line);
-
-            IClientObservableObserverActor observableObserverActorStocks = ActorProxy.Create<IClientObservableObserverActor>(
-                new ActorId("StockMarket"),
-                TestObservableObserverActorUri);
-            Console.WriteLine(" - ActorProxy for the observable actor created.");
-
-            // Clear all observers and publications.
-            observableObserverActorStocks.ClearObserversAndPublicationsAsync(true).Wait();
-            Console.WriteLine(" - All observers and publications cleared for the observable actor.");
-
-            // Register observable actors
-            string topic = "Stocks";
-            observableObserverActorStocks.RegisterObservableActorAsync(topic).Wait();
-            Console.Write(" - Actor registered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Retrieve observables by topic from the registry
-            Uri registryServiceUri = new Uri($"{ApplicationUri}{RegistryServiceUri}");
-            ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(registryServiceUri).Result;
-            int registryServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
-            IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(
-                registryServiceUri,
-                new ServicePartitionKey(PartitionResolver.Resolve(topic, registryServicePartitionCount)));
-            IEnumerable<EntityId> observableList = registryServiceProxy.QueryObservablesAsync(topic, null).Result;
-            Console.Write(" - Observables for [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic:");
-            foreach (EntityId entity in observableList)
-            {
-                Console.Write("   > ");
+                Console.Write(" - Observer actors registered: Topic = [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(entity.ToString());
+                Console.Write($"{topic}");
                 Console.ForegroundColor = ConsoleColor.White;
-            }
+                Console.Write("] Observable = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{observableObserverActorIoTEntityId.EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
 
-            // Create observer service proxies
-            IClientObserverService observableObserverServiceMsft = ServiceProxy.Create<IClientObserverService>(
-                TestObservableObserverServiceUri,
-                new ServicePartitionKey(2));
+                topic = "Rome";
 
-            // Create observer actor proxies
-            IClientObserverActor observableObserverActorAmzn = ActorProxy.Create<IClientObserverActor>(new ActorId("BBBB"), TestObservableObserverActorUri);
-            IClientObserverActor observableObserverActorOrcl = ActorProxy.Create<IClientObserverActor>(new ActorId("CCCC"), TestObservableObserverActorUri);
+                observableObserverActorP.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorQ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorR.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorS.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorU.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorV.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorW.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorX.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
+                observableObserverActorY.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
 
-            // Get observables identity
-            EntityId observableObserverActorStocksEntityId = observableObserverActorStocks.GetEntityIdAsync().Result;
+                // The observableObserverActorIoT observable actor for Milan topic registers as an observer:
+                // - topic = Rome and observable =  observableObserverServiceIoT
+                observableObserverActorIoT.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId50}, observableObserverServiceIoTEntityId)
+                    .Wait();
 
-            // Register observableObserverServiceMsft observableObserverActorAmzn as observers:
-            // - topic = Stocks and observable =  observableObserverActorStocks
-            const string filterExpressionForMsftTicker = "stock = 'AAAA'";
-            const string filterExpressionForAmznTicker = "stock = 'BBBB'";
-            const string filterExpressionForOrclTicker = "stock = 'CCCC'";
+                // When the observable for Rome topic will send a JSON message,
+                // Z won't receive the message as its filter expression is not satisfied by the JSON message
+                observableObserverActorZ.RegisterObserverActorAsync(topic, new List<string> {filterExpressionForId60}, observableObserverServiceIoTEntityId)
+                    .Wait();
 
-            observableObserverServiceMsft.RegisterObserverServiceAsync(
-                "Stocks",
-                new List<string> {filterExpressionForMsftTicker},
-                observableObserverActorStocksEntityId).Wait();
-            observableObserverActorAmzn.RegisterObserverActorAsync(
-                "Stocks",
-                new List<string> {filterExpressionForAmznTicker},
-                observableObserverActorStocksEntityId).Wait();
-            observableObserverActorOrcl.RegisterObserverActorAsync(
-                "Stocks",
-                new List<string> {filterExpressionForOrclTicker},
-                observableObserverActorStocksEntityId).Wait();
+                Console.Write(" - Observer actors registered: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Observable = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{observableObserverServiceIoTEntityId.EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
 
-            Console.Write(" - Observer actors and service registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] Observable = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{observableObserverActorStocksEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observableObserverActorStocks observable actor sends a JSON message
-            Message[] messageArray =
-            {
-                new Message {Body = "{'stock': 'AAAA', 'value': 56}"},
-                new Message {Body = "{'stock': 'BBBB', 'value': 675}"},
-                new Message {Body = "{'stock': 'CCCC', 'value': 39}"}
-            };
-            foreach (Message message in messageArray)
-            {
-                observableObserverActorStocks.NotifyObserversAsync(topic, message, true).Wait();
+                // The observableObserverActorIoT observable actor sends a JSON message
+                topic = "Milan";
+                Message message = new Message {Body = "{'id': 10, 'value': 52}"};
+                observableObserverActorIoT.NotifyObserversAsync("Milan", message, true).Wait();
 
                 Console.Write(" - Observable actor has sent a message. Topic = [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -809,187 +663,383 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestClient
                 Console.Write($"{message.Body}");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("]");
+
+                // The observableObserverServiceIoT observable service sends a JSON message
+                topic = "Rome";
+                message = new Message {Body = "{'id': 50, 'value': 52}"};
+                observableObserverServiceIoT.NotifyObserversAsync(topic, message, true).Wait();
+
+                Console.Write(" - Observable service partition has sent a message. Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Messages = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{message.Body}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
+
+                // Unregister one of the observers
+                topic = "Milan";
+                observableObserverActorX.UnregisterObserverActorAsync(topic, observableObserverActorIoTEntityId).Wait();
+
+                Console.Write(" - Actor unregistered as an observer: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Observer = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{new EntityId(new ActorId("X"), TestObservableObserverActorUri).EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
+
+                // The observable sends a text, non-JSON message.
+                // observableObserverActorX is no longer receiving messages as it unregistered as observer of observable A for Milan topic.
+                // Note: the message is not in JSON format, hence the message is broadcasted to all observers as filter expressions
+                //       are not evaluated.
+                topic = "Milan";
+                message = new Message {Body = "Non-JSON message"};
+                observableObserverActorIoT.NotifyObserversAsync(topic, message, true).Wait();
+
+                Console.Write(" - Observable actor has sent a message. Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Messages = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{message.Body}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
+
+
+                // Unregister the observables
+                topic = "Milan";
+                observableObserverActorIoT.UnregisterObservableActorAsync(topic, true).Wait();
+
+                Console.Write(" - Actor unregistered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                topic = "Rome";
+                observableObserverServiceIoT.UnregisterObservableServiceAsync(topic, true).Wait();
+
+                Console.Write(" - Service partition unregistered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Write Line
+                Console.WriteLine(Line);
             }
-
-            // Unregister the observables
-            observableObserverActorStocks.UnregisterObservableActorAsync("Stocks", true).Wait();
-
-            Console.Write(" - Actor unregistered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
-
-            // Write Line
-            Console.WriteLine(Line);
+            catch (Exception ex)
+            {
+                PrintException(ex);
+            }
         }
 
-        private static void StockMarketTestViaGateway()
+        private static void StockMarketTestViaProxy()
         {
-            // Create ShortEntityId for observable actor
-            ShortEntityId entityId = new ShortEntityId("StockMarket", TestObservableObserverActorUri);
-            Console.WriteLine(" - ShortEntityId for the observable actor created.");
-
-            // Create request message for observable service
-            GatewayRequest gatewayRequest = new GatewayRequest
+            try
             {
-                ObservableEntityId = entityId,
-                UseObserverAsProxy = true
-            };
+                // Write Line
+                Console.WriteLine(Line);
 
-            // Clear all observers and publications for observable actor
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/clear");
-            Console.WriteLine(" - All observers and publications cleared for the observable actor.");
+                IClientObservableObserverActor observableObserverActorStocks = ActorProxy.Create<IClientObservableObserverActor>(
+                    new ActorId("StockMarket"),
+                    TestObservableObserverActorUri);
+                Console.WriteLine(" - ActorProxy for the observable actor created.");
 
-            // Register observable actor
-            const string topic = "Stocks";
-            gatewayRequest.Topic = topic;
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/register");
-            Console.Write(" - Actor registered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
+                // Clear all observers and publications.
+                observableObserverActorStocks.ClearObserversAndPublicationsAsync(true).Wait();
+                Console.WriteLine(" - All observers and publications cleared for the observable actor.");
 
-            // Retrieve observables by topic from the registry
-            string[] topicArray = {"Stocks"};
-            foreach (string t in topicArray)
-            {
-                gatewayRequest = new GatewayRequest
-                {
-                    Topic = t
-                };
-                HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/registry/service/get");
-                string json = response.Content.ReadAsStringAsync().Result;
-                if (string.IsNullOrWhiteSpace(json))
-                    continue;
-                IEnumerable<ShortEntityId> observableList = JsonConvert.DeserializeObject<IEnumerable<ShortEntityId>>(json);
+                // Register observable actors
+                string topic = "Stocks";
+                observableObserverActorStocks.RegisterObservableActorAsync(topic).Wait();
+                Console.Write(" - Actor registered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Retrieve observables by topic from the registry
+                Uri registryServiceUri = new Uri($"{ApplicationUri}{RegistryServiceUri}");
+                ServicePartitionList servicePartitionList = FabricClient.QueryManager.GetPartitionListAsync(registryServiceUri).Result;
+                int registryServicePartitionCount = (servicePartitionList != null) && servicePartitionList.Any() ? servicePartitionList.Count : 1;
+                IRegistryService registryServiceProxy = ServiceProxy.Create<IRegistryService>(
+                    registryServiceUri,
+                    new ServicePartitionKey(PartitionResolver.Resolve(topic, registryServicePartitionCount)));
+                IEnumerable<EntityId> observableList = registryServiceProxy.QueryObservablesAsync(topic, null).Result;
                 Console.Write(" - Observables for [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{t}");
+                Console.Write($"{topic}");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("] topic:");
-                foreach (ShortEntityId entity in observableList)
+                foreach (EntityId entity in observableList)
                 {
                     Console.Write("   > ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine(entity.ToString());
                     Console.ForegroundColor = ConsoleColor.White;
                 }
-            }
 
-            // Define filter expressions
-            const string filterExpressionForMsftTicker = "stock = 'AAAA'";
-            const string filterExpressionForAmznTicker = "stock = 'BBBB'";
-            const string filterExpressionForOrclTicker = "stock = 'CCCC'";
+                // Create observer service proxies
+                IClientObserverService observableObserverServiceMsft = ServiceProxy.Create<IClientObserverService>(
+                    TestObservableObserverServiceUri,
+                    new ServicePartitionKey(2));
 
-            // Register AAAA observer service
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                FilterExpressions = new List<string> {filterExpressionForMsftTicker},
-                ObserverEntityId = new ShortEntityId(2, TestObservableObserverServiceUri),
-                ObservableEntityId = entityId
-            };
-            SendRequestToGateway(gatewayRequest, "api/observer/service/register");
+                // Create observer actor proxies
+                IClientObserverActor observableObserverActorAmzn = ActorProxy.Create<IClientObserverActor>(new ActorId("AMZN"), TestObservableObserverActorUri);
+                IClientObserverActor observableObserverActorOrcl = ActorProxy.Create<IClientObserverActor>(new ActorId("AAPL"), TestObservableObserverActorUri);
 
-            Console.Write(" - Observer actor [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{gatewayRequest.ObserverEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
+                // Get observables identity
+                EntityId observableObserverActorStocksEntityId = observableObserverActorStocks.GetEntityIdAsync().Result;
 
-            // Register BBBB observer actor
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                FilterExpressions = new List<string> {filterExpressionForAmznTicker},
-                ObserverEntityId = new ShortEntityId("BBBB", TestObservableObserverActorUri),
-                ObservableEntityId = entityId
-            };
-            SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
+                // Register observableObserverServiceMsft observableObserverActorAmzn as observers:
+                // - topic = Stocks and observable =  observableObserverActorStocks
+                const string filterExpressionForMsftTicker = "stock = 'MSFT'";
+                const string filterExpressionForAmznTicker = "stock = 'AMZN'";
+                const string filterExpressionForOrclTicker = "stock = 'AAPL'";
 
-            Console.Write(" - Observer actor [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{gatewayRequest.ObserverEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
+                observableObserverServiceMsft.RegisterObserverServiceAsync(
+                    "Stocks",
+                    new List<string> {filterExpressionForMsftTicker},
+                    observableObserverActorStocksEntityId).Wait();
+                observableObserverActorAmzn.RegisterObserverActorAsync(
+                    "Stocks",
+                    new List<string> {filterExpressionForAmznTicker},
+                    observableObserverActorStocksEntityId).Wait();
+                observableObserverActorOrcl.RegisterObserverActorAsync(
+                    "Stocks",
+                    new List<string> {filterExpressionForOrclTicker},
+                    observableObserverActorStocksEntityId).Wait();
 
-            // Register CCCC observer actor
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                FilterExpressions = new List<string> {filterExpressionForOrclTicker},
-                ObserverEntityId = new ShortEntityId("CCCC", TestObservableObserverActorUri),
-                ObservableEntityId = entityId
-            };
-            SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
-
-            Console.Write(" - Observer actor [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{gatewayRequest.ObserverEntityId.EntityUri.AbsoluteUri}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("] registered: Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("]");
-
-            // The observable actor sends an array of JSON messages
-            Message[] messageArray =
-            {
-                new Message {Body = "{'stock': 'AAAA', 'value': 56}"},
-                new Message {Body = "{'stock': 'BBBB', 'value': 675}"},
-                new Message {Body = "{'stock': 'CCCC', 'value': 39}"}
-            };
-
-            gatewayRequest = new GatewayRequest
-            {
-                Topic = topic,
-                Messages = messageArray,
-                ObservableEntityId = entityId,
-                UseObserverAsProxy = true
-            };
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/notify");
-
-            Console.Write(" - Observable actor has sent the following messages. Topic = [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] Messages:");
-            foreach (Message message in gatewayRequest.Messages)
-            {
-                Console.Write("   > [");
+                Console.Write(" - Observer actors and service registered: Topic = [");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"{message.Body}");
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] Observable = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{observableObserverActorStocksEntityId.EntityUri.AbsoluteUri}");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine("]");
+
+                // The observableObserverActorStocks observable actor sends a JSON message
+                Message[] messageArray =
+                {
+                    new Message {Body = "{'stock': 'MSFT', 'value': 56}"},
+                    new Message {Body = "{'stock': 'AMZN', 'value': 675}"},
+                    new Message {Body = "{'stock': 'AAPL', 'value': 39}"}
+                };
+                foreach (Message message in messageArray)
+                {
+                    observableObserverActorStocks.NotifyObserversAsync(topic, message, true).Wait();
+
+                    Console.Write(" - Observable actor has sent a message. Topic = [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{topic}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write("] Messages = [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{message.Body}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("]");
+                }
+
+                // Unregister the observables
+                observableObserverActorStocks.UnregisterObservableActorAsync("Stocks", true).Wait();
+
+                Console.Write(" - Actor unregistered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Write Line
+                Console.WriteLine(Line);
             }
-
-            // Unregister the observable
-            gatewayRequest = new GatewayRequest
+            catch (Exception ex)
             {
-                Topic = topic,
-                ObservableEntityId = entityId
+                PrintException(ex);
+            }
+        }
+
+        private static void StockMarketTestViaGateway()
+        {
+            try
+            {
+                // Create ShortEntityId for observable actor
+                ShortEntityId entityId = new ShortEntityId("StockMarket", TestObservableObserverActorUri);
+                Console.WriteLine(" - ShortEntityId for the observable actor created.");
+
+                // Create request message for observable service
+                GatewayRequest gatewayRequest = new GatewayRequest
+                {
+                    ObservableEntityId = entityId,
+                    UseObserverAsProxy = true
+                };
+
+                // Clear all observers and publications for observable actor
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/clear");
+                Console.WriteLine(" - All observers and publications cleared for the observable actor.");
+
+                // Register observable actor
+                const string topic = "Stocks";
+                gatewayRequest.Topic = topic;
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/register");
+                Console.Write(" - Actor registered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Retrieve observables by topic from the registry
+                string[] topicArray = { "Stocks" };
+                foreach (string t in topicArray)
+                {
+                    gatewayRequest = new GatewayRequest
+                    {
+                        Topic = t
+                    };
+                    HttpResponseMessage response = SendRequestToGateway(gatewayRequest, "api/registry/service/get");
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    if (string.IsNullOrWhiteSpace(json))
+                        continue;
+                    IEnumerable<ShortEntityId> observableList = JsonConvert.DeserializeObject<IEnumerable<ShortEntityId>>(json);
+                    Console.Write(" - Observables for [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{t}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("] topic:");
+                    foreach (ShortEntityId entity in observableList)
+                    {
+                        Console.Write("   > ");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(entity.ToString());
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                }
+
+                // Define filter expressions
+                const string filterExpressionForMsftTicker = "stock = 'MSFT'";
+                const string filterExpressionForAmznTicker = "stock = 'AMZN'";
+                const string filterExpressionForOrclTicker = "stock = 'AAPL'";
+
+                // Register MSFT observer service
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    FilterExpressions = new List<string> { filterExpressionForMsftTicker },
+                    ObserverEntityId = new ShortEntityId(2, TestObservableObserverServiceUri),
+                    ObservableEntityId = entityId
+                };
+                SendRequestToGateway(gatewayRequest, "api/observer/service/register");
+
+                Console.Write(" - Observer actor [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{gatewayRequest.ObserverEntityId.EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] registered: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
+
+                // Register AMZN observer actor
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    FilterExpressions = new List<string> { filterExpressionForAmznTicker },
+                    ObserverEntityId = new ShortEntityId("AMZN", TestObservableObserverActorUri),
+                    ObservableEntityId = entityId
+                };
+                SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
+
+                Console.Write(" - Observer actor [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{gatewayRequest.ObserverEntityId.EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] registered: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
+
+                // Register AAPL observer actor
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    FilterExpressions = new List<string> { filterExpressionForOrclTicker },
+                    ObserverEntityId = new ShortEntityId("AAPL", TestObservableObserverActorUri),
+                    ObservableEntityId = entityId
+                };
+                SendRequestToGateway(gatewayRequest, "api/observer/actor/register");
+
+                Console.Write(" - Observer actor [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{gatewayRequest.ObserverEntityId.EntityUri.AbsoluteUri}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("] registered: Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("]");
+
+                // The observable actor sends an array of JSON messages
+                Message[] messageArray =
+                {
+                new Message {Body = "{'stock': 'MSFT', 'value': 56}"},
+                new Message {Body = "{'stock': 'AMZN', 'value': 675}"},
+                new Message {Body = "{'stock': 'AAPL', 'value': 39}"}
             };
-            SendRequestToGateway(gatewayRequest, "api/observable/actor/unregister");
 
-            Console.Write(" - Actor unregistered as an observable for the [");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{topic}");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("] topic.");
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    Messages = messageArray,
+                    ObservableEntityId = entityId,
+                    UseObserverAsProxy = true
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/notify");
 
-            // Write Line
-            Console.WriteLine(Line);
+                Console.Write(" - Observable actor has sent the following messages. Topic = [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] Messages:");
+                foreach (Message message in gatewayRequest.Messages)
+                {
+                    Console.Write("   > [");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{message.Body}");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine("]");
+                }
+
+                // Unregister the observable
+                gatewayRequest = new GatewayRequest
+                {
+                    Topic = topic,
+                    ObservableEntityId = entityId
+                };
+                SendRequestToGateway(gatewayRequest, "api/observable/actor/unregister");
+
+                Console.Write(" - Actor unregistered as an observable for the [");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{topic}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("] topic.");
+
+                // Write Line
+                Console.WriteLine(Line);
+            }
+            catch (Exception ex)
+            {
+                PrintException(ex);
+            }
         }
 
         private static HttpResponseMessage SendRequestToGateway(GatewayRequest gatewayRequest, string relativeUri)

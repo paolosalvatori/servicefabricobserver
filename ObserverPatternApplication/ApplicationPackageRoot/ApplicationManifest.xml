@@ -5,21 +5,26 @@
     <Parameter Name="GatewayService_ServiceRelativePath" DefaultValue="gateway" />
     <Parameter Name="GatewayService_MaxRetryCount" DefaultValue="3" />
     <Parameter Name="GatewayService_BackoffDelay" DefaultValue="1" />
+    <Parameter Name="GatewayService_PlacementConstraints" DefaultValue="" />
     <Parameter Name="TestObservableObserverActor_PartitionCount" DefaultValue="3" />
     <Parameter Name="TestObservableObserverActor_MinReplicaSetSize" DefaultValue="2" />
     <Parameter Name="TestObservableObserverActor_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="TestObservableObserverActor_PlacementConstraints" DefaultValue="" />
     <Parameter Name="MessageBoxService_PartitionCount" DefaultValue="3" />
     <Parameter Name="MessageBoxService_MinReplicaSetSize" DefaultValue="2" />
     <Parameter Name="MessageBoxService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="MessageBoxService_PlacementConstraints" DefaultValue="" />
+    <Parameter Name="MessageBoxService_MaxQueueSize" DefaultValue="1000" />
     <Parameter Name="RegistryService_PartitionCount" DefaultValue="1" />
     <Parameter Name="RegistryService_MinReplicaSetSize" DefaultValue="2" />
     <Parameter Name="RegistryService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="RegistryService_PlacementConstraints" DefaultValue="" />
     <Parameter Name="TestObservableObserverService_MinReplicaSetSize" DefaultValue="2" />
     <Parameter Name="TestObservableObserverService_PartitionCount" DefaultValue="1" />
     <Parameter Name="TestObservableObserverService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="TestObservableObserverService_PlacementConstraints" DefaultValue="" />
     <Parameter Name="Framework_RegistryServiceUri" DefaultValue="fabric:/ObserverPattern/RegistryService" />
     <Parameter Name="Framework_MessageBoxServiceUri" DefaultValue="fabric:/ObserverPattern/MessageBoxService" />
-    <Parameter Name="MessageBoxService_MaxQueueSize" DefaultValue="1000" />
   </Parameters>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="GatewayServicePkg" ServiceManifestVersion="1.0.0" />
@@ -83,26 +88,31 @@
     <Service Name="GatewayService">
       <StatelessService ServiceTypeName="GatewayServiceType" InstanceCount="[GatewayService_InstanceCount]">
         <SingletonPartition />
+        <PlacementConstraints>[GatewayService_PlacementConstraints]</PlacementConstraints>
       </StatelessService>
     </Service>
     <Service Name="TestObservableObserverActor" GeneratedIdRef="f09c83fe-3c0f-43f2-89aa-286bb2609589|None">
       <StatefulService ServiceTypeName="TestObservableObserverActorType" TargetReplicaSetSize="[TestObservableObserverActor_TargetReplicaSetSize]" MinReplicaSetSize="[TestObservableObserverActor_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[TestObservableObserverActor_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+        <PlacementConstraints>[TestObservableObserverActor_PlacementConstraints]</PlacementConstraints>
       </StatefulService>
     </Service>
     <Service Name="TestObservableObserverService">
       <StatefulService ServiceTypeName="TestObservableObserverServiceType" TargetReplicaSetSize="[TestObservableObserverService_TargetReplicaSetSize]" MinReplicaSetSize="[TestObservableObserverService_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[TestObservableObserverService_PartitionCount]" LowKey="1" HighKey="[TestObservableObserverService_PartitionCount]" />
+        <PlacementConstraints>[TestObservableObserverService_PlacementConstraints]</PlacementConstraints>
       </StatefulService>
     </Service>
     <Service Name="MessageBoxService">
       <StatefulService ServiceTypeName="MessageBoxServiceType" TargetReplicaSetSize="[MessageBoxService_TargetReplicaSetSize]" MinReplicaSetSize="[MessageBoxService_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[MessageBoxService_PartitionCount]" LowKey="1" HighKey="[MessageBoxService_PartitionCount]" />
+        <PlacementConstraints>[MessageBoxService_PlacementConstraints]</PlacementConstraints>
       </StatefulService>
     </Service>
     <Service Name="RegistryService">
       <StatefulService ServiceTypeName="RegistryServiceType" TargetReplicaSetSize="[RegistryService_TargetReplicaSetSize]" MinReplicaSetSize="[RegistryService_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[RegistryService_PartitionCount]" LowKey="1" HighKey="[RegistryService_PartitionCount]" />
+        <PlacementConstraints>[RegistryService_PlacementConstraints]</PlacementConstraints>
       </StatefulService>
     </Service>
   </DefaultServices>
