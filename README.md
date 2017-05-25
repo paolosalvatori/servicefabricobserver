@@ -9,14 +9,15 @@ This project contains a framework that provides an implementation of the Observe
 # Introduction #
 The Service Fabric Observer Framework provides the base classes and services to implement the Observer design pattern in a Service Fabric application.
 
-<center>![Architecture](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Architecture.png)</center>
+![Architecture](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Architecture.png)
+
 
 The design pattern shown in the above diagram represents a hybrid between Observable-Observer and Observer design patterns: in fact, in this framework observables and observers communicate with each other directly as in the Observer pattern, but observers typically discover topic-specific observables via a stateful registry service. In addition, they can specify filter expressions to receive only a subset of messages sent by observables. The registry service exposes the **IRegistryService** interface that can used by observable services and actors to register and unregister as an observable for a given topic. Observers can invoke the **QueryObservables** method to discover observables for a given topic. The observer can register with one or multiple observables by invoking the **RegisterObserver** method on the **IObservable** interface exposed by an observable. Likewise, when a service partition or actor is removed from the system, or whenever it decides to no longer receive messages from a given observable, it can invoke the **UnregisterObserver** on the **IObservable** interface exposed by the observable service partition or actor. Each observer maintains a list of the observable to which is registered. Likewise, an observable maintains a list of its observers, and it sends a copy of the message to each of them by invoking the **Notify** method on their **ISubscribe** interface. The observable can directly send the message to each of the observers, or can divide observers by cluster node, and use one the observers for each node as a proxy. In this case, along with the message, the observer will receive a list of observers located on the same node to which forward the message. When the observable is unable to send a message to the proxy observer, it will write the message to the messagebox of the observer by invoking the **WriteMessages** method exposed by the **MessageBoxService** and will promote another observer from the same list as proxy for the node. More in general, the framework retries every operation a configurable amount of time and uses a configurable backoff delay  between retries. In particular, when an observable sends messages to its observers, the observable tries to send the message to each observer directly or via a proxy and in case the maximum number of retries expires, he message is saved to the messagebox of the observer, so that, when it comes back online, it can retrieve along with the other messages by invoking the ReadMessages method exposed by the **MessageBoxService**. Before shutting down, an observable invokes the **UnregisterObservable** method on the **ISubscribe** interface of its observers to notify them that it is leaving. Likewise, the observable invokes the **UnregisterObservable** on the **IRegistry** interface exposed by the registry service, to notify it that it’s leaving. The registry service proceed to remove the observable from the list of observables for a certain topic. The registry service uses a **ReliableDictionary** to store observables: the item key is the topic, while the value is a list of observables for that topic. Observables are required to periodically send a heartbeat message to the registry service.
 
 ## Demo ##
 The following diagram shows the architecture design of the demo:
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Demo.png)</center>
+![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Demo.png)
 
 As you can see, you can use a client application to invoke three different tests, directly via ActorProxy/ServiceProxy when testing the application on the local cluster, or via gateway service that is implemented as a stateless reliable service. The gateway service exposes a REST interface implemented by six ASP.NET Web API REST services (**ApiController**). These services, allows to interact with:
 
@@ -31,7 +32,7 @@ The test application contains two samples:
  - Stock Market
 Both samples can be run on the local Service Fabric cluster or a remote Service Fabric cluster on Azure using the client the companion test console application.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Client.png)</center>
+![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Client.png)
 
 The client application can invoke the underlying reliable and actor test services directly using a [ServiceProxy](https://msdn.microsoft.com/en-us/library/microsoft.servicefabric.services.remoting.client.serviceproxy.aspx "ServiceProxy") or [ActorProxy](https://msdn.microsoft.com/en-us/library/microsoft.servicefabric.actors.client.actorproxy.aspx "ActorProxy") instance or via the **GatewayService** using an [HttpClient](https://msdn.microsoft.com/en-us/library/system.net.http.httpclient(v=vs.118).aspx) object. When client running the client application against a remote cluster, you can only invoke the reliable and actor services via the **GatewayService**.
 In addition, the client application allows to enumerate or delete all the instance of the **TestObservableObserverActor** actor type. For more information on the client application, see the code of the **Program.cs** file under the **ObservableObserverApplication.TestClient** project.
@@ -51,13 +52,13 @@ The **TestObservableObserverService** class inherits from the **ObservableObserv
 
 The following picture depicts the message flow implemented by the sample.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/IoTSample01.png)</center>
+![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/IoTSample01.png)
 
 As you can see, the **Milan Site** observable actor sends a JSON message to multiple observers. In particular, when the value of the **useObserverAsProxy** boolean parameter is equal to **true**, the **NotifyObserversAsync** method splits the observers by cluster node name and instead of invoking each observer, it sends the message to an observer per cluster node, and includes in the call the list of the remaining observer entities located on the same node. The observers directly invoked by the observable will act as a proxy and will invoke the remaining observers located on the same node. When the value of the **useObserverAsProxy** boolean parameter is equal to **false**, the observable invoked each of the observer directly, regardless if they are located on the same or a different cluster node.   
 
 The following picture depicts the second message flow implemented by the sample.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/IoTSample02.png)</center>
+![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/IoTSample02.png)
 
 In this case, a partition of the **TestObservableObserverService** service sends a JSON message to multiple observer actors. Each message has the following format:
 
@@ -76,7 +77,7 @@ The three observers that register with the **Stock Market** observable actor on 
 
 The following picture depicts the second message flow implemented by the sample.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/StockMarket.png)</center>
+![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/StockMarket.png)
 
 # TestObservableObserverService #
 The following table shows the code of the **TestObservableObserverService** class. As you can see, in order to create a stateful reliable service that acts as both an observable and observer, you need to inherit the service class from the **ObservableObserverServiceBase** abstract class contained in the **Framework** project. If you want to define a service that acts only as an observable, the related class needs to inherit from the **ObservableServiceBase** abstract class. Likewise, if you want to create a service that acts only as an observer, the class needs to inherit from the **ObserverServiceBase** abstract class. In order to handle the events exposed by the base class, you need to define event handlers in the class constructor as shown in the code below.
@@ -345,7 +346,7 @@ namespace Microsoft.AzureCat.Samples.ObserverPattern.TestObservableObserverActor
 # Monitoring the Test Application on the Local Cluster #
 The observable and observer classes use custom **SourceEvent** classes to generate ETW events. You can use Visual Studio to see streaming events while running the application on the local cluster, as shown in the following picture.
 
-<center>![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Diagnostics.png)</center>
+![Demo](https://raw.githubusercontent.com/paolosalvatori/servicefabricobserver/master/Images/Diagnostics.png)
 
 # Appendix #
 This section contains a description of the Observer design pattern.
